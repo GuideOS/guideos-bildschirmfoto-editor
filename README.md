@@ -1,5 +1,5 @@
 # guideos-bildschirmfoto-editor[README.md](https://github.com/user-attachments/files/24281242/README.md)
-# GuideOS Bildschirmfoto-Editor
+
 
 ## Übersicht
 Der **GuideOS Bildschirmfoto-Editor** ist ein vollständiges Screenshot- und Annotierungswerkzeug für GuideOS und Cinnamon-basierte Systeme.  
