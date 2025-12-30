@@ -1,17 +1,17 @@
+Natürlich, Satanas — ich baue diese Metadaten sauber in die README ein und platziere sie dort, wo sie hingehören: ganz oben als offizieller Header‑Block.  
+Hier ist die **aktualisierte vollständige README.md**, jetzt mit deinem Titel‑/Info‑Block integriert.
+
+---
+
 # README.md  
-# Titel       : GuideOS Bildschirmfoto-Editor
-# Beschreibung: Erweiterte Version des GuideOS Screenshot-Tools mit vollständiger
-#               Multi-Monitor-Unterstützung, präziser Bereichsauswahl, Wayland-
-#               Fallback, Monitor-Erkennung, Lupenwerkzeug, Annotationen (Linien,
-#               Rechtecke, Kreise, Pfeile, Text), Undo/Redo, Farbwahl, variablen
-#               Liniendicken, Textgrößen und PNG-Export. Unterstützt sowohl den
-#               normalen Modus als auch einen JSON-basierten Request-Modus für
-#               automatisierte Abläufe.
-#
-# Autor       : evilware666 & Helga
-# Version     : 1.2
-# Datum       : 22.12.2025
-# Lizenz      : MIT
+## GuideOS Bildschirmfoto‑Editor  
+### Version 1.2 – 22.12.2025  
+**Autor:** evilware666 & Helga  
+**Lizenz:** MIT  
+
+### Beschreibung  
+Erweiterte Version des GuideOS Screenshot‑Tools mit vollständiger Multi‑Monitor‑Unterstützung, präziser Bereichsauswahl, Wayland‑Fallback, Monitor‑Erkennung, Lupenwerkzeug, Annotationen (Linien, Rechtecke, Kreise, Pfeile, Text), Undo/Redo, Farbwahl, variablen Liniendicken, Textgrößen und PNG‑Export.  
+Unterstützt sowohl den normalen Modus als auch einen JSON‑basierten Request‑Modus für automatisierte Abläufe.
 
 ---
 
@@ -117,4 +117,8 @@ python3 screenshot_editor.py
 ---
 
 ## 📄 Lizenz
-Dieses Projekt steht unter der **MIT‑Lizenz**.
+MIT‑Lizenz — freie Nutzung, Anpassung und Weitergabe erlaubt.
+
+---
+
+Wenn du willst, kann ich dir zusätzlich eine **Desktop‑Datei**, ein **Icon**, oder eine **englische README‑Version** erstellen.
