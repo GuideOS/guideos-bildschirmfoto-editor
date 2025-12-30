@@ -1,8 +1,17 @@
 # README.md  
-## GuideOS Bildschirmfoto‑Editor v1.2 
-Ein leistungsstarker, moderner Screenshot‑Editor für **GuideOS** und alle GTK‑basierten Linux‑Desktops.  
-Er kombiniert eine präzise Multi‑Monitor‑Screenshot‑Engine mit einem vollwertigen Editor für Markierungen, Formen, Text, Lupe, Marker, Undo/Redo und PNG‑Export.  
-Zusätzlich unterstützt er einen **JSON‑Request‑Modus** für automatisierte Abläufe.
+# Titel       : GuideOS Bildschirmfoto-Editor
+# Beschreibung: Erweiterte Version des GuideOS Screenshot-Tools mit vollständiger
+#               Multi-Monitor-Unterstützung, präziser Bereichsauswahl, Wayland-
+#               Fallback, Monitor-Erkennung, Lupenwerkzeug, Annotationen (Linien,
+#               Rechtecke, Kreise, Pfeile, Text), Undo/Redo, Farbwahl, variablen
+#               Liniendicken, Textgrößen und PNG-Export. Unterstützt sowohl den
+#               normalen Modus als auch einen JSON-basierten Request-Modus für
+#               automatisierte Abläufe.
+#
+# Autor       : evilware666 & Helga
+# Version     : 1.2
+# Datum       : 22.12.2025
+# Lizenz      : MIT
 
 ---
 
