@@ -1,64 +1,111 @@
-# guideos-bildschirmfoto-editor[README.md](https://github.com/user-attachments/files/24281242/README.md)
-
-
-## Übersicht
-Der **GuideOS Bildschirmfoto-Editor** ist ein vollständiges Screenshot- und Annotierungswerkzeug für GuideOS und Cinnamon-basierte Systeme.  
-Er kombiniert eine präzise Bereichsauswahl mit einem leistungsfähigen Editor, der Linien, Rechtecke, Ellipsen, Pfeile und Text unterstützt.  
-Das Tool ist vollständig GTK-basiert und bietet Undo/Redo, Farbauswahl, Liniendicke, Textgröße sowie einen modernen Cinnamon-Look.
-
-- **Autor:** evilware666 & Helga  
-- **Version:** 1.0  
-- **Letzte Änderung:** 21.12.2025  
-- **Lizenz:** Frei nutzbar im Rahmen von GuideOS  
+# README.md  
+## GuideOS Bildschirmfoto‑Editor v1.2 
+Ein leistungsstarker, moderner Screenshot‑Editor für **GuideOS** und alle GTK‑basierten Linux‑Desktops.  
+Er kombiniert eine präzise Multi‑Monitor‑Screenshot‑Engine mit einem vollwertigen Editor für Markierungen, Formen, Text, Lupe, Marker, Undo/Redo und PNG‑Export.  
+Zusätzlich unterstützt er einen **JSON‑Request‑Modus** für automatisierte Abläufe.
 
 ---
 
-## Funktionen
+## ✨ Hauptfunktionen
 
-### Bereichsauswahl
-- Halbtransparente Overlay-Auswahl  
-- Live-Anzeige der Auswahlgröße  
-- ESC zum Abbrechen  
-- Enter/Space zum Bestätigen  
+### 🖼️ Screenshot‑Engine
+- Multi‑Monitor‑Erkennung mit korrekter Geometrie  
+- Bereichsauswahl mit Live‑Größenanzeige  
+- Monitor‑Info bei Multi‑Monitor‑Screenshots  
+- Wayland‑Fallback (falls `Gdk.pixbuf_get_from_window` fehlschlägt)  
+- Monitor‑Offsets werden korrekt berücksichtigt  
+- Auswahlfenster mit halbtransparentem Overlay
 
-### Screenshot-Engine
-- Aufnahme eines beliebigen Bildschirmbereichs  
-- Fallback für Wayland (Vollbild → Subpixbuf)  
-
-### Editor
+### 🖊️ Editor‑Funktionen
 - Werkzeuge:
   - Linie  
   - Rechteck  
   - Ellipse  
   - Pfeil  
   - Text  
+  - Marker  
+  - Lupe (Magnifier)  
 - Undo/Redo  
-- Farbauswahl  
-- Liniendicke einstellbar  
-- Textgröße einstellbar  
-- Cinnamon-kompatible Icons und CSS  
-- Scrollbarer Arbeitsbereich  
-- Speichern als PNG mit Zeitstempel  
+- Farbwahl  
+- Variable Liniendicken  
+- Variable Textgrößen  
+- Vergrößerungsfaktor für Lupe einstellbar  
+- Zoomfunktion (Strg + Mausrad)  
+- Zentrierte Werkzeugleiste  
+- Cinnamon‑kompatibles CSS‑Styling (#2573bf)
 
-### Startfenster
-- Minimalistische GUI  
-- Button „Bereich auswählen“  
-- Info-Hinweis  
-
-### Request-Modus
-- Startbar mit `--request`  
-- Gibt JSON zurück (für Integrationen in andere Tools)  
+### 💾 Export & Automatisierung
+- PNG‑Export mit Zeitstempel  
+- Dateidialog für benutzerdefinierten Speicherort  
+- JSON‑Request‑Modus:
+  - Startbar mit JSON‑Input  
+  - Gibt nach Bearbeitung JSON‑Output zurück  
+  - Ideal für Dokumentation, Support‑Tools, Automatisierung
 
 ---
 
-## Abhängigkeiten
-- `python3-gi`  
-- `gir1.2-gtk-3.0`  
-- `gir1.2-gdk-3.0`  
-- `gir1.2-pangocairo-1.0`  
-- `python3-cairo`  
+## 📦 Installation
 
-Installation (Debian/Ubuntu):
+### Voraussetzungen
+- Python 3  
+- GTK3 + GObject Introspection  
+- Cairo  
+- Pango  
+
+### Benötigte Pakete (Debian/Ubuntu)
 ```bash
-sudo apt install python3-gi gir1.2-gtk-3.0 gir1.2-gdk-3.0 gir1.2-pangocairo-1.0 python3-cairo
+sudo apt install python3-gi python3-cairo gir1.2-gtk-3.0 gir1.2-pango-1.0
+```
 
+### Starten
+```bash
+python3 screenshot_editor.py
+```
+
+---
+
+## ▶️ Bedienung
+
+### Bereichsauswahl
+1. Programm starten  
+2. Auswahlfenster erscheint im Vollbild  
+3. Mit der Maus einen Bereich ziehen  
+4. Größe wird live angezeigt  
+5. Enter → Auswahl bestätigen  
+6. Escape → Abbrechen  
+
+### Editor
+- Werkzeugleiste ist zentriert unter dem Screenshot  
+- Werkzeuge per Klick aktivieren  
+- Zeichnen durch Klicken & Ziehen  
+- Text durch Klick setzen  
+- Lupe durch Ziehen bewegen  
+- Zoom mit **Strg + Mausrad**  
+- Speichern über den Header‑Button  
+
+---
+
+## 🧩 Code‑Struktur
+
+| Komponente | Beschreibung |
+|-----------|--------------|
+| `ScreenshotEngine` | Screenshot‑Erfassung, Monitor‑Infos |
+| `AreaSelectorWindow` | Vollbild‑Auswahlfenster |
+| `Tool` | Werkzeug‑Konstanten |
+| `EditorWindow` | Haupteditor mit Werkzeugleiste |
+| Cairo‑Zeichenlogik | Rendering von Formen, Text, Lupe |
+| JSON‑Modus | Automatisierte Screenshot‑Workflows |
+
+---
+
+## 🛠️ Technologien
+- **GTK3** (UI)  
+- **GdkPixbuf** (Screenshots)  
+- **Cairo** (Zeichnen)  
+- **Pango** (Text)  
+- **JSON** (Request‑Modus)  
+
+---
+
+## 📄 Lizenz
+Dieses Projekt steht unter der **MIT‑Lizenz**.
