@@ -114,6 +114,3 @@ python3 screenshot_editor.py
 ## 📄 Lizenz
 MIT‑Lizenz — freie Nutzung, Anpassung und Weitergabe erlaubt.
 
----
-
-Wenn du willst, kann ich dir zusätzlich eine **Desktop‑Datei**, ein **Icon**, oder eine **englische README‑Version** erstellen.
