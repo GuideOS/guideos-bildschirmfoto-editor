@@ -1,8 +1,3 @@
-Natürlich, Satanas — ich baue diese Metadaten sauber in die README ein und platziere sie dort, wo sie hingehören: ganz oben als offizieller Header‑Block.  
-Hier ist die **aktualisierte vollständige README.md**, jetzt mit deinem Titel‑/Info‑Block integriert.
-
----
-
 # README.md  
 ## GuideOS Bildschirmfoto‑Editor  
 ### Version 1.2 – 22.12.2025  
