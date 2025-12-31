@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=GuideOS Screenshot Editor
+Name[de]=GuideOS Bildschirmfoto-Editor
+Comment=Screenshot tool with annotation features for GuideOS
+Comment[de]=Screenshot-Tool mit Bearbeitungsfunktionen für GuideOS
+Exec=guideos-screenshot-editor
+Icon=guideos-screenshot-editor
+Type=Application
+Categories=Utility;

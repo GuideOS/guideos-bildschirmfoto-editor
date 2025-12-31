@@ -1,0 +1,13 @@
+Source: guideos-screenshot-editor
+Section: utils
+Priority: optional
+Maintainer: Actionschnitzel <actionschnitzel@guideos.de>
+Build-Depends: debhelper (>= 12), python3
+Standards-Version: 4.5.0
+Homepage: 
+
+Package: guideos-screenshot-editor
+Architecture: all
+Depends: ${misc:Depends}, python3, python3-gi, gir1.2-gtk-3.0, gir1.2-gdk-3.0, gir1.2-pangocairo-1.0, python3-cairo
+Description: GuideOS Screenshot Editor
+ Ein einfaches Tool zum Bearbeiten von Screenshots unter GuideOS.
