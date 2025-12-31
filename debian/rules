@@ -1,3 +1,10 @@
 #!/usr/bin/make -f
 %:
 	dh $@
+
+override_dh_install:
+	dh_install
+	install -D -m 755 guideos-screenshot-editor debian/guideos-screenshot-editor/usr/lib/guideos/guideos-screenshot-editor/guideos-screenshot-editor
+	install -D -m 644 GuideOS-Screenshot-Editor.desktop debian/guideos-screenshot-editor/usr/share/applications/GuideOS-Screenshot-Editor.desktop
+	install -D -m 644 guideos-screenshot-editor.svg debian/guideos-screenshot-editor/usr/share/icons/hicolor/scalable/apps/guideos-screenshot-editor.svg
+	ln -sf /usr/lib/guideos/guideos-screenshot-editor/guideos-screenshot-editor debian/guideos-screenshot-editor/usr/bin/guideos-screenshot-editor

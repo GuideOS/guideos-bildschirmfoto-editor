@@ -6,4 +6,4 @@ Comment[de]=Screenshot-Tool mit Bearbeitungsfunktionen für GuideOS
 Exec=guideos-screenshot-editor
 Icon=guideos-screenshot-editor
 Type=Application
-Categories=Utility;
+Categories=Utility;GuideOS;
