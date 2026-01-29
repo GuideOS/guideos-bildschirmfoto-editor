@@ -9,11 +9,11 @@
 #               Rechtecke, Kreise, Pfeile, Text), Undo/Redo, Farbwahl, variablen
 #               Liniendicken, Textgrößen und PNG-Export. Unterstützt sowohl den
 #               normalen Modus als auch einen JSON-basierten Request-Modus für
-#               automatisierte Abläufe.
+#               automatisierte Abläufe. Außerdem können Bilder jetzt in die Zwischenablage kopiert werden.
 #
 # Autor       : evilware666 & Helga
 # Version     : 1.4
-# Datum       : 29.12.2025
+# Datum       : 29.01.2026
 # Lizenz      : MIT
 # ==============================================================================
 #
