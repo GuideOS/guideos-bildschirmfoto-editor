@@ -4,11 +4,11 @@
 ## Übersicht
 Der **GuideOS Bildschirmfoto-Editor** ist ein vollständiges Screenshot- und Annotierungswerkzeug für GuideOS und Cinnamon-basierte Systeme.  
 Er kombiniert eine präzise Bereichsauswahl mit einem leistungsfähigen Editor, der Linien, Rechtecke, Ellipsen, Pfeile und Text unterstützt.  
-Das Tool ist vollständig GTK-basiert und bietet Undo/Redo, Farbauswahl, Liniendicke, Textgröße sowie einen modernen Cinnamon-Look.
+Das Tool ist vollständig GTK-basiert und bietet Undo/Redo, Farbauswahl, Liniendicke, Zwischenablage,Textgröße sowie einen modernen Cinnamon-Look.
 
 - **Autor:** evilware666 & Helga  
-- **Version:** 1.0  
-- **Letzte Änderung:** 21.12.2025  
+- **Version:** 1.4  
+- **Letzte Änderung:** 29.01.2026  
 - **Lizenz:** Frei nutzbar im Rahmen von GuideOS  
 
 ---
@@ -47,7 +47,10 @@ Das Tool ist vollständig GTK-basiert und bietet Undo/Redo, Farbauswahl, Liniend
 
 ### Request-Modus
 - Startbar mit `--request`  
-- Gibt JSON zurück (für Integrationen in andere Tools)  
+- Gibt JSON zurück (für Integrationen in andere Tools)
+
+### Zwischenablage
+- Jetzt können Bilder auch in die Zwischenablage kopiert werden
 
 ---
 
