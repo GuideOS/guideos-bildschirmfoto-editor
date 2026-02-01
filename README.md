@@ -8,7 +8,7 @@ Das Tool ist vollständig GTK-basiert und bietet Undo/Redo, Farbauswahl, Liniend
 
 - **Autor:** evilware666 & Helga  
 - **Version:** 1.5  
-- **Letzte Änderung:** 29.01.2026  
+- **Letzte Änderung:** 01.02.2026  
 - **Lizenz:** Frei nutzbar im Rahmen von GuideOS  
 
 ---
