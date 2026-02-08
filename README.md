@@ -7,7 +7,7 @@ Er kombiniert eine präzise Bereichsauswahl mit einem leistungsfähigen Editor, 
 Das Tool ist vollständig GTK-basiert und bietet Undo/Redo, Farbauswahl, Liniendicke, Zwischenablage,Textgröße sowie einen modernen Cinnamon-Look.
 
 - **Autor:** evilware666 & Helga  
-- **Version:** 1.5  
+- **Version:** 1.6  
 - **Letzte Änderung:** 29.01.2026  
 - **Lizenz:** Frei nutzbar im Rahmen von GuideOS  
 
