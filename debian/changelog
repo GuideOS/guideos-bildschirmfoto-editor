@@ -1,4 +1,4 @@
-guideos-screenshot-editor (1.6) unstable; urgency=medium
+guideos-screenshot-editor (1.6-1) unstable; urgency=medium
 
   * Fixed inconsistent colors when using the clipboard
   * Update version number to 1.6
