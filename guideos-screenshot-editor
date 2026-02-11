@@ -1,31 +1,6 @@
 #! /bin/bash
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# ==============================================================================
-# Titel       : GuideOS Bildschirmfoto-Editor
-# Beschreibung: Erweiterte Version des GuideOS Screenshot-Tools mit vollständiger
-#               Multi-Monitor-Unterstützung, präziser Bereichsauswahl, Wayland-
-#               Fallback, Monitor-Erkennung, Lupenwerkzeug, Annotationen (Linien,
-#               Rechtecke, Kreise, Pfeile, Text), Undo/Redo, Farbwahl, variablen
-#               Liniendicken, Textgrößen und PNG-Export. Unterstützt sowohl den
-#               normalen Modus als auch einen JSON-basierten Request-Modus für
-#               automatisierte Abläufe.
-#
-# Autor       : evilware666 & Helga
-# Version     : 1.6
-# Datum       : 01.02.2026
-# Lizenz      : MIT
-# ==============================================================================
-#
-# Hinweis     : - Multi-Monitor-Auswahl mit korrekter Geometrie-Erkennung.
-#               - Bereichsauswahl zeigt Live-Größe und Monitor-Info an.
-#               - Screenshot-Engine unterstützt Monitor-Offsets und Wayland-Fallback.
-#               - Editor bietet Lupe, Text, Pfeile, Formen, Undo/Redo und Farbauswahl.
-#               - PNG-Export mit Zeitstempel und Dateidialog.
-#               - Request-Modus gibt JSON zurück (für Automatisierung).
-#               - Ideal für Dokumentation, Support, Tutorials und präzise Markups.
-#
-# -------------------------------------------------------
 
 import gi
 gi.require_version("Gtk", "3.0")
