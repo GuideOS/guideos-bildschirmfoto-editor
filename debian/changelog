@@ -1,3 +1,11 @@
+guideos-screenshot-editor (1.6) unstable; urgency=medium
+
+  * Fixed inconsistent colors when using the clipboard
+  * Update version number to 1.6
+  * Update last modified date in README.md
+
+ -- Actionschnitzel <actionschnitzel@guideos.de>  Tue, 11 Feb 2026 12:00:00 +0000
+
 guideos-screenshot-editor (1.0) unstable; urgency=medium
 
   * Initial release
