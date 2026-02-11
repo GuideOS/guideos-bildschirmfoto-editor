@@ -6,13 +6,6 @@ Der **GuideOS Bildschirmfoto-Editor** ist ein vollständiges Screenshot- und Ann
 Er kombiniert eine präzise Bereichsauswahl mit einem leistungsfähigen Editor, der Linien, Rechtecke, Ellipsen, Pfeile und Text unterstützt.  
 Das Tool ist vollständig GTK-basiert und bietet Undo/Redo, Farbauswahl, Liniendicke, Zwischenablage,Textgröße sowie einen modernen Cinnamon-Look.
 
-- **Autor:** evilware666 & Helga  
-- **Version:** 1.6  
-- **Letzte Änderung:** 29.01.2026  
-- **Lizenz:** Frei nutzbar im Rahmen von GuideOS  
-
----
-
 ## Funktionen
 
 ### Bereichsauswahl

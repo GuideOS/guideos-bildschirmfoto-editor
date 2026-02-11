@@ -1,32 +1,6 @@
 #! /bin/bash
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# ==============================================================================
-# Titel       : GuideOS Bildschirmfoto-Editor
-# Beschreibung: Erweiterte Version des GuideOS Screenshot-Tools mit vollständiger
-#               Multi-Monitor-Unterstützung, präziser Bereichsauswahl, Wayland-
-#               Fallback, Monitor-Erkennung, Lupenwerkzeug, Annotationen (Linien,
-#               Rechtecke, Kreise, Pfeile, Text), Undo/Redo, Farbwahl, variablen
-#               Liniendicken, Textgrößen und PNG-Export. Unterstützt sowohl den
-#               normalen Modus als auch einen JSON-basierten Request-Modus für
-#               automatisierte Abläufe. Außerdem können Bilder jetzt in die Zwischenablage kopiert werden.
-#
-# Autor       : evilware666 & Helga
-# Version     : 1.6
-# Datum       : 29.01.2026
-# Lizenz      : MIT
-# ==============================================================================
-#
-# Hinweis     : - Multi-Monitor-Auswahl mit korrekter Geometrie-Erkennung.
-#               - Bereichsauswahl zeigt Live-Größe und Monitor-Info an.
-#               - Screenshot-Engine unterstützt Monitor-Offsets und Wayland-Fallback.
-#               - Editor bietet Lupe, Text, Pfeile, Formen, Undo/Redo und Farbauswahl.
-#               - PNG-Export mit Zeitstempel und Dateidialog.
-#               - Request-Modus gibt JSON zurück (für Automatisierung).
-#               - Ideal für Dokumentation, Support, Tutorials und präzise Markups.
-#               - Update: Jetzt mit Zwischenablage
-#
-# -------------------------------------------------------
 
 import gi
 gi.require_version("Gtk", "3.0")
@@ -628,7 +602,10 @@ class EditorWindow(Gtk.Window):
         color_btn.connect("color-set", self.on_color_set)
         color_btn.get_style_context().add_class("color-button")
         
-        # Liniendicke
+        # Liniendicke mit Beschriftung
+        linewidth_box = Gtk.VBox(spacing=2)
+        linewidth_label = Gtk.Label()
+        linewidth_label.set_markup("<span size='small'>Strichgröße</span>")
         linewidth_combo = Gtk.ComboBoxText()
         linewidth_combo.set_tooltip_text("Liniendicke")
         linewidth_combo.set_size_request(80, 30)
@@ -637,8 +614,13 @@ class EditorWindow(Gtk.Window):
         linewidth_combo.set_active(2)  # 3px
         linewidth_combo.connect("changed", self.on_linewidth_changed)
         linewidth_combo.get_style_context().add_class("combobox")
+        linewidth_box.pack_start(linewidth_label, False, False, 0)
+        linewidth_box.pack_start(linewidth_combo, False, False, 0)
         
-        # Textgröße
+        # Textgröße mit Beschriftung
+        textsize_box = Gtk.VBox(spacing=2)
+        textsize_label = Gtk.Label()
+        textsize_label.set_markup("<span size='small'>Schriftgröße</span>")
         textsize_combo = Gtk.ComboBoxText()
         textsize_combo.set_tooltip_text("Textgröße")
         textsize_combo.set_size_request(80, 30)
@@ -647,27 +629,34 @@ class EditorWindow(Gtk.Window):
         textsize_combo.set_active(5)  # 24pt
         textsize_combo.connect("changed", self.on_textsize_changed)
         textsize_combo.get_style_context().add_class("combobox")
+        textsize_box.pack_start(textsize_label, False, False, 0)
+        textsize_box.pack_start(textsize_combo, False, False, 0)
         
-        # Vergrößerungsfaktor für Lupe
+        # Vergrößerungsfaktor für Lupe mit Beschriftung
+        magnifier_box = Gtk.VBox(spacing=2)
+        magnifier_label = Gtk.Label()
+        magnifier_label.set_markup("<span size='small'>Lupenvergrößerung</span>")
         magnifier_combo = Gtk.ComboBoxText()
         magnifier_combo.set_tooltip_text("Vergrößerung")
-        magnifier_combo.set_size_request(80, 30)
+        magnifier_combo.set_size_request(100, 30)
         for scale in self.magnifier_scales:
             magnifier_combo.append_text(f"{scale:.1f}×")
         magnifier_combo.set_active(1)  # 2.0x
         magnifier_combo.connect("changed", self.on_magnifier_changed)
         magnifier_combo.get_style_context().add_class("combobox")
+        magnifier_box.pack_start(magnifier_label, False, False, 0)
+        magnifier_box.pack_start(magnifier_combo, False, False, 0)
 
         # Werkzeuge zur Toolbar hinzufügen (inklusive Marker und Undo/Redo mit neuen Icons)
         for btn in [line_btn, rect_btn, ellipse_btn, arrow_btn, text_btn, 
                    marker_btn, magnifier_btn,
                    Gtk.SeparatorToolItem(), color_btn, 
                    Gtk.SeparatorToolItem(), undo_btn, redo_btn,
-                   Gtk.SeparatorToolItem(), linewidth_combo,
-                   Gtk.SeparatorToolItem(), textsize_combo,
-                   Gtk.SeparatorToolItem(), magnifier_combo]:
+                   Gtk.SeparatorToolItem(), linewidth_box,
+                   Gtk.SeparatorToolItem(), textsize_box,
+                   Gtk.SeparatorToolItem(), magnifier_box]:
             if isinstance(btn, Gtk.Widget):
-                if isinstance(btn, (Gtk.Button, Gtk.ComboBoxText, Gtk.ToggleButton, Gtk.ColorButton)):
+                if isinstance(btn, (Gtk.Button, Gtk.ComboBoxText, Gtk.ToggleButton, Gtk.ColorButton, Gtk.VBox)):
                     container = Gtk.ToolItem()
                     container.add(btn)
                     toolbar.add(container)
@@ -723,26 +712,13 @@ class EditorWindow(Gtk.Window):
     
     def on_quit_clicked(self, btn):
         """Beendet das Programm vollständig"""
-        # Bestätigungsdialog
-        dialog = Gtk.MessageDialog(
-            transient_for=self,
-            flags=0,
-            message_type=Gtk.MessageType.QUESTION,
-            buttons=Gtk.ButtonsType.YES_NO,
-            text="Programm beenden"
-        )
-        dialog.format_secondary_text("Möchten Sie das Programm wirklich beenden?\nNicht gespeicherte Änderungen gehen verloren.")
+        if self.request_mode:
+            # Im Request-Modus: JSON-Ausgabe und beenden
+            print(json.dumps({"status": "cancelled", "file": None}))
         
-        response = dialog.run()
-        dialog.destroy()
-        
-        if response == Gtk.ResponseType.YES:
-            if self.request_mode:
-                # Im Request-Modus: JSON-Ausgabe und beenden
-                print(json.dumps({"status": "cancelled", "file": None}))
-            # Programm vollständig beenden
-            self.destroy()
-            Gtk.main_quit()
+        # Programm vollständig beenden
+        self.destroy()
+        Gtk.main_quit()
 
     # ------------------- Hilfsfunktionen für Zoom-Koordinaten -------------------
     
@@ -1155,16 +1131,41 @@ class EditorWindow(Gtk.Window):
             for shape in self.shapes:
                 self.draw_shape(cr, shape)
             
-            # Surface in Pixbuf konvertieren
+            # Surface in Pixbuf konvertieren - KORREKTUR HIER!
+            # Cairo ARGB32 nutzt BGRA-Byte-Reihenfolge in little-endian
+            # Wir müssen die Kanäle umordnen
+            import array
+            
             data = surface.get_data()
+            stride = surface.get_stride()
+            
+            # Neue Daten für RGB(A) erstellen
+            rgb_data = array.array('B')
+            
+            for y in range(height):
+                for x in range(width):
+                    offset = y * stride + x * 4
+                    # Cairo ARGB32 ist BGRA in Speicher (little-endian)
+                    b = data[offset + 0]
+                    g = data[offset + 1]
+                    r = data[offset + 2]
+                    a = data[offset + 3]
+                    
+                    # In RGB(A) umwandeln
+                    rgb_data.append(r)
+                    rgb_data.append(g)
+                    rgb_data.append(b)
+                    rgb_data.append(a)
+            
+            # Pixbuf aus konvertierten Daten erstellen
             pixbuf = GdkPixbuf.Pixbuf.new_from_data(
-                data, 
+                rgb_data.tobytes(),
                 GdkPixbuf.Colorspace.RGB,
                 True,  # has_alpha
                 8,     # bits_per_sample
                 width, 
                 height,
-                surface.get_stride()
+                width * 4  # stride für RGBA
             )
             
             # In die Zwischenablage kopieren
@@ -1181,6 +1182,11 @@ class EditorWindow(Gtk.Window):
                 text="In Zwischenablage kopiert"
             )
             message_dialog.format_secondary_text("Das Bild wurde in die Zwischenablage kopiert und kann nun in andere Anwendungen eingefügt werden.")
+            
+            # Haupttext mit blauem Hintergrund (#2573bf) und weißer Schrift
+            label = message_dialog.get_message_area().get_children()[0]
+            label.set_markup('<span background="#2573bf" foreground="white" weight="bold" size="large"> In Zwischenablage kopiert </span>')
+            
             message_dialog.run()
             message_dialog.destroy()
             
@@ -1334,6 +1340,10 @@ def run_request_mode():
     
     x, y, w, h = rect
     
+    # Kurz warten, damit das Overlay-Fenster vollständig verschwindet
+    import time
+    time.sleep(0.2)  # 200ms Wartezeit
+    
     # Screenshot aufnehmen (mit Monitor-Info)
     pixbuf = ScreenshotEngine.capture_area(x, y, w, h, monitor)
     
@@ -1399,6 +1409,12 @@ class StartWindow(Gtk.Window):
         btn_area.connect("clicked", self.on_area_clicked)
         main_box.pack_start(btn_area, True, True, 0)
 
+        # Zoom-Hinweis unter dem Button
+        zoom_hint = Gtk.Label()
+        zoom_hint.set_markup("<span size='small' style='italic'>Tipp: Strg + Mausrad zum Zoomen im Editor</span>")
+        zoom_hint.set_margin_top(5)
+        main_box.pack_start(zoom_hint, False, False, 0)
+
         # Info (korrigiert - ohne class-Attribut)
         info_label = Gtk.Label()
         info_label.set_markup("<span size='small'></span>")
@@ -1448,7 +1464,8 @@ class StartWindow(Gtk.Window):
         
         x, y, w, h = rect
         
-        GLib.timeout_add(50, lambda: self.capture_area_delayed(x, y, w, h, monitor))
+        # Längere Wartezeit (200ms statt 50ms), damit Overlay vollständig verschwindet
+        GLib.timeout_add(200, lambda: self.capture_area_delayed(x, y, w, h, monitor))
         return False
     
     def capture_area_delayed(self, x, y, w, h, monitor):
