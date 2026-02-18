@@ -1,28 +1,37 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # ==============================================================================
-# Titel       : GuideOS Bildschirmfoto-Editor
-# Beschreibung: Erweiterte Version des GuideOS Screenshot-Tools mit vollständiger
-#               Multi-Monitor-Unterstützung, präziser Bereichsauswahl, Wayland-
-#               Fallback, Monitor-Erkennung, Lupenwerkzeug, Annotationen (Linien,
-#               Rechtecke, Kreise, Pfeile, Text), Undo/Redo, Farbwahl, variablen
-#               Liniendicken, Textgrößen und PNG-Export. Unterstützt sowohl den
-#               normalen Modus als auch einen JSON-basierten Request-Modus für
-#               automatisierte Abläufe.
+#  GuideOS Bildschirmfoto‑Editor – Erweiterte Edition
+#  --------------------------------------------------
+#  Ein leistungsstarkes Screenshot‑ und Markup‑Werkzeug mit:
+#    • Vollständiger Multi‑Monitor‑Unterstützung
+#    • Präziser Bereichsauswahl inkl. Live‑Größenanzeige
+#    • Wayland‑Fallback und korrekter Monitor‑Geometrie
+#    • Lupenwerkzeug, Pfeile, Linien, Rechtecke, Kreise, Text
+#    • Freihand‑Modus, Marker, Farbwahl, variable Liniendicken
+#    • Undo/Redo‑System und PNG‑Export mit Zeitstempel
+#    • JSON‑Request‑Modus für automatisierte Abläufe
 #
-# Autor       : evilware666 & Helga
-# Version     : 1.2
-# Datum       : 22.12.2025
-# Lizenz      : MIT
+#  Projekt:   GuideOS – Bildschirmfoto‑Editor
+#  Datei:     guideos-screenshot-editor.py
+#  Autoren:   evilware666 & Helga
+#  Version:   1.8
+#  Lizenz:    MIT
+#  Datum:     18.02.2026
+#
+#  Hinweis:
+#    Ideal für Dokumentation, Support, Tutorials und präzise Markups.
+#    Unterstützt X11 und Wayland (Fallback‑Mechanismen integriert).
 # ==============================================================================
+
 #
 # Hinweis     : - Multi-Monitor-Auswahl mit korrekter Geometrie-Erkennung.
-#               - Bereichsauswahl zeigt Live-Größe und Monitor-Info an.
-#               - Screenshot-Engine unterstützt Monitor-Offsets und Wayland-Fallback.
-#               - Editor bietet Lupe, Text, Pfeile, Formen, Undo/Redo und Farbauswahl.
+#               - Bereichsauswahl zeigt Live-Gr\u00f6\u00dfe und Monitor-Info an.
+#               - Screenshot-Engine unterst\u00fctzt Monitor-Offsets und Wayland-Fallback.
+#               - Editor bietet Lupe, Text, Pfeile, Formen, Freihand, Undo/Redo.
 #               - PNG-Export mit Zeitstempel und Dateidialog.
-#               - Request-Modus gibt JSON zurück (für Automatisierung).
-#               - Ideal für Dokumentation, Support, Tutorials und präzise Markups.
+#               - Request-Modus gibt JSON zur\u00fcck (f\u00fcr Automatisierung).
+#               - Ideal f\u00fcr Dokumentation, Support, Tutorials und pr\u00e4zise Markups.
 #
 # -------------------------------------------------------
 
@@ -49,17 +58,14 @@ class ScreenshotEngine:
         screen = display.get_default_screen()
         
         if monitor_num is not None:
-            # Bestimmten Monitor verwenden
             monitor = display.get_monitor(monitor_num)
             geometry = monitor.get_geometry()
             monitor_x, monitor_y = geometry.x, geometry.y
             monitor_width, monitor_height = geometry.width, geometry.height
             
-            # Koordinaten an Monitor anpassen
             x += monitor_x
             y += monitor_y
             
-            # Sicherstellen, dass Bereich innerhalb des Monitors liegt
             if x < monitor_x:
                 x = monitor_x
             if y < monitor_y:
@@ -76,7 +82,6 @@ class ScreenshotEngine:
         
         pb = Gdk.pixbuf_get_from_window(root, int(x), int(y), int(width), int(height))
 
-        # Fallback für Wayland
         if pb is None:
             try:
                 full_width = root.get_width()
@@ -91,7 +96,7 @@ class ScreenshotEngine:
     
     @staticmethod
     def get_monitors():
-        """Gibt Informationen über alle Monitore zurück"""
+        """Gibt Informationen \u00fcber alle Monitore zur\u00fcck"""
         display = Gdk.Display.get_default()
         monitors = []
         
@@ -114,7 +119,7 @@ class ScreenshotEngine:
 
 class AreaSelectorWindow(Gtk.Window):
     def __init__(self, multi_monitor=False):
-        super().__init__(title="Bereich auswählen")
+        super().__init__(title="Bereich ausw\u00e4hlen")
         self.set_decorated(False)
         self.set_app_paintable(True)
         self.set_keep_above(True)
@@ -129,7 +134,6 @@ class AreaSelectorWindow(Gtk.Window):
         if visual:
             self.set_visual(visual)
 
-        # Zurück zu Vollbild mit blau-transparentem Hintergrund
         if self.multi_monitor:
             display = Gdk.Display.get_default()
             min_x = 0
@@ -145,10 +149,9 @@ class AreaSelectorWindow(Gtk.Window):
                 max_x = max(max_x, geometry.x + geometry.width)
                 max_y = max(max_y, geometry.y + geometry.height)
             
-            # Fenster über alle Monitore positionieren
             self.move(min_x, min_y)
             self.set_default_size(max_x - min_x, max_y - min_y)
-            self.fullscreen_on_monitor(screen, 0)  # Hauptmonitor für Fullscreen
+            self.fullscreen_on_monitor(screen, 0)
         else:
             self.fullscreen()
 
@@ -176,8 +179,7 @@ class AreaSelectorWindow(Gtk.Window):
 
     def on_draw(self, widget, cr):
         alloc = self.get_allocation()
-        # Blau-transparenter Hintergrund (0.4 Deckkraft)
-        cr.set_source_rgba(0, 0, 0.5, 0.4)  # Blau statt schwarz
+        cr.set_source_rgba(0, 0, 0.5, 0.4)
         cr.rectangle(0, 0, alloc.width, alloc.height)
         cr.fill()
 
@@ -194,24 +196,20 @@ class AreaSelectorWindow(Gtk.Window):
             w = abs(x2 - x1)
             h = abs(y2 - y1)
 
-            # Heller ausgesparter Bereich in der Auswahl
             cr.set_source_rgba(1, 1, 1, 0.1)
             cr.rectangle(x, y, w, h)
             cr.fill()
 
-            # Rahmen
             cr.set_source_rgba(1, 1, 1, 0.8)
             cr.set_line_width(2)
             cr.rectangle(x, y, w, h)
             cr.stroke()
 
-            # Größe anzeigen
             cr.select_font_face("Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
             cr.set_font_size(14)
-            text = f"{int(w)} × {int(h)}"
+            text = f"{int(w)} \u00d7 {int(h)}"
             extents = cr.text_extents(text)
             
-            # Hintergrund für Text
             text_x = x + 10
             text_y = y + 25
             cr.set_source_rgba(0, 0, 0, 0.7)
@@ -219,12 +217,10 @@ class AreaSelectorWindow(Gtk.Window):
                         extents.width + 10, extents.height + 10)
             cr.fill()
             
-            # Text
             cr.set_source_rgba(1, 1, 1, 1)
             cr.move_to(text_x, text_y)
             cr.show_text(text)
             
-            # Monitor-Info für Multi-Monitor
             if self.multi_monitor and self.selected_monitor is not None:
                 monitor_text = f"Monitor {self.selected_monitor + 1}"
                 cr.set_font_size(12)
@@ -232,13 +228,11 @@ class AreaSelectorWindow(Gtk.Window):
                 text_x2 = x + w - extents2.width - 10
                 text_y2 = y + h - 10
                 
-                # Hintergrund für Monitor-Text
                 cr.set_source_rgba(0, 0, 0, 0.7)
                 cr.rectangle(text_x2 - 5, text_y2 - extents2.height - 5, 
                             extents2.width + 10, extents2.height + 10)
                 cr.fill()
                 
-                # Monitor-Text
                 cr.set_source_rgba(1, 1, 1, 1)
                 cr.move_to(text_x2, text_y2)
                 cr.show_text(monitor_text)
@@ -251,7 +245,6 @@ class AreaSelectorWindow(Gtk.Window):
             self.cur_y = event.y
             self.selecting = True
             
-            # Monitor ermitteln für Multi-Monitor
             if self.multi_monitor:
                 self.selected_monitor = self.get_monitor_at_position(event.x, event.y)
             
@@ -262,7 +255,6 @@ class AreaSelectorWindow(Gtk.Window):
             self.cur_x = event.x
             self.cur_y = event.y
             
-            # Monitor ermitteln für Multi-Monitor
             if self.multi_monitor and self.selected_monitor is None:
                 self.selected_monitor = self.get_monitor_at_position(event.x, event.y)
             
@@ -279,7 +271,7 @@ class AreaSelectorWindow(Gtk.Window):
             w = abs(x2 - x1)
             h = abs(y2 - y1)
 
-            if w > 10 and h > 10:  # Minimale Größe
+            if w > 10 and h > 10:
                 self.result_rect = (x, y, w, h)
             self.finished = True
 
@@ -331,17 +323,19 @@ class Tool:
     TEXT = "text"
     MAGNIFIER = "magnifier"
     MARKER = "marker"
+    FREEHAND = "freehand"   # NEU: Freihand-Malen
+
+
 # ===================== Editor-Fenster =====================
 
 class EditorWindow(Gtk.Window):
     def __init__(self, image_pixbuf, request_mode=False):
         super().__init__(title="GuideOS Bildschirmfoto-Editor")
-        self.set_border_width(0)  # Kein Border mehr
+        self.set_border_width(0)
         self.set_default_icon_name("applets-screenshooter")
         self.request_mode = request_mode
-        self.set_position(Gtk.WindowPosition.CENTER_ALWAYS)  # Immer zentrieren
+        self.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
 
-        # CSS für Cinnamon-Integration mit Farbe #2573bf - Theme-kompatibel
         css_provider = Gtk.CssProvider()
         css = """
         .tool-button {
@@ -391,7 +385,7 @@ class EditorWindow(Gtk.Window):
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
 
-        self.current_tool = None  # Kein Tool initial aktiv
+        self.current_tool = None
         self.shapes = []
         self.undo_stack = []
         self.redo_stack = []
@@ -400,13 +394,14 @@ class EditorWindow(Gtk.Window):
         self.start_y = 0
         self.current_x = 0
         self.current_y = 0
-        # Farbe #2573bf in RGB (37/115/191)
         self.current_color = (0.1451, 0.4510, 0.7490, 1.0)
         self.current_line_width = 3.0
         self.current_text_size = 24.0
-        self.magnifier_scale = 2.0  # Vergrößerungsfaktor für Lupe
-        
-        # Neue Attribute für Werkzeugleiste
+        self.magnifier_scale = 2.0
+
+        # NEU: Freihand-Punkte f\u00fcr aktuelle Linie
+        self.freehand_points = []
+
         self.font_sizes = [12, 14, 16, 18, 20, 24, 28, 32, 36, 48]
         self.line_widths = [1, 2, 3, 4, 5, 6, 8, 10]
         self.magnifier_scales = [1.5, 2.0, 2.5, 3.0, 4.0, 5.0]
@@ -414,25 +409,45 @@ class EditorWindow(Gtk.Window):
         self.background_pixbuf = image_pixbuf
         self.background_surface = self.pixbuf_to_surface(image_pixbuf)
 
-        # Bildgrößen für Zentrierung
         self.image_width = self.background_surface.get_width()
         self.image_height = self.background_surface.get_height()
         
-        # Standard-Fenstergröße (wird später angepasst)
         self.set_default_size(800, 600)
-        self.set_size_request(400, 300)  # Absolute Mindestgröße
+        self.set_size_request(400, 300)
 
         main_box = Gtk.VBox(spacing=0)
         self.add(main_box)
 
-        # HeaderBar für Cinnamon-Integration mit Fensterkontrollen
         header_bar = Gtk.HeaderBar()
         header_bar.set_show_close_button(True)
         header_bar.set_title("GuideOS Bildschirmfoto-Editor")
-        header_bar.set_decoration_layout("menu:minimize,maximize,close")  # Fensterkontrollen
+        header_bar.set_decoration_layout("menu:minimize,maximize,close")
         self.set_titlebar(header_bar)
 
-        # Zeichenbereich - wird auf Bildgröße gesetzt
+        quit_btn = Gtk.Button.new_with_label("Beenden")
+        quit_btn.get_style_context().add_class("suggested-action")
+        quit_btn.connect("clicked", self.on_quit_clicked)
+        header_bar.pack_start(quit_btn)
+
+        if self.request_mode:
+            cancel_btn = Gtk.Button.new_with_label("Abbrechen")
+            cancel_btn.connect("clicked", lambda w: self.on_cancel_clicked())
+            header_bar.pack_start(cancel_btn)
+        else:
+            info_btn = Gtk.Button.new_with_label("Info")
+            info_btn.connect("clicked", lambda w: self.show_info())
+            header_bar.pack_start(info_btn)
+
+        clipboard_btn = Gtk.Button.new_with_label("Zwischenablage")
+        clipboard_btn.get_style_context().add_class("suggested-action")
+        clipboard_btn.connect("clicked", self.on_clipboard_clicked)
+        header_bar.pack_end(clipboard_btn)
+        
+        save_btn = Gtk.Button.new_with_label("Speichern")
+        save_btn.get_style_context().add_class("suggested-action")
+        save_btn.connect("clicked", self.on_save_clicked)
+        header_bar.pack_end(save_btn)
+
         self.drawing_area = Gtk.DrawingArea()
         self.drawing_area.set_size_request(self.image_width, self.image_height)
         self.drawing_area.connect("draw", self.on_draw)
@@ -440,52 +455,44 @@ class EditorWindow(Gtk.Window):
             Gdk.EventMask.BUTTON_PRESS_MASK
             | Gdk.EventMask.BUTTON_RELEASE_MASK
             | Gdk.EventMask.POINTER_MOTION_MASK
-            | Gdk.EventMask.SCROLL_MASK  # Wichtig: Mausrad-Events hinzufügen
+            | Gdk.EventMask.SCROLL_MASK
         )
         self.drawing_area.connect("button-press-event", self.on_button_press)
         self.drawing_area.connect("button-release-event", self.on_button_release)
         self.drawing_area.connect("motion-notify-event", self.on_mouse_move)
-        self.drawing_area.connect("scroll-event", self.on_scroll_event)  # Neue Event-Handler
+        self.drawing_area.connect("scroll-event", self.on_scroll_event)
         
-        # Viewport für Zentrierung des Bildes
         viewport = Gtk.Viewport()
         viewport.set_shadow_type(Gtk.ShadowType.NONE)
         viewport.add(self.drawing_area)
         
-        # Align-Box für horizontale und vertikale Zentrierung
         align_box = Gtk.Alignment()
-        align_box.set(0.5, 0.5, 0, 0)  # xalign=0.5, yalign=0.5, xscale=0, yscale=0
+        align_box.set(0.5, 0.5, 0, 0)
         align_box.add(viewport)
         
-        # Scroll-Fenster für große Bilder
         self.scrolled_window = Gtk.ScrolledWindow()
         self.scrolled_window.set_shadow_type(Gtk.ShadowType.IN)
         self.scrolled_window.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
         self.scrolled_window.add(align_box)
         main_box.pack_start(self.scrolled_window, True, True, 0)
 
-        # Container für zentrierte Werkzeugleiste
         toolbar_container = Gtk.HBox()
         toolbar_container.set_border_width(5)
         toolbar_container.set_margin_top(5)
         toolbar_container.set_margin_bottom(5)
         main_box.pack_start(toolbar_container, False, False, 0)
 
-        # Linker Platzhalter für Zentrierung
         left_spacer = Gtk.Label("")
         left_spacer.set_hexpand(True)
         toolbar_container.pack_start(left_spacer, True, True, 0)
 
-        # Werkzeugleiste (horizontal)
         toolbar = Gtk.HBox(spacing=5)
         toolbar_container.pack_start(toolbar, False, False, 0)
 
-        # Rechter Platzhalter für Zentrierung
         right_spacer = Gtk.Label("")
         right_spacer.set_hexpand(True)
         toolbar_container.pack_start(right_spacer, True, True, 0)
 
-        # Hilfsfunktion für benutzerdefinierte Icons mit Fallback
         def create_tool_button_with_custom_icon(custom_icon_names, label, tool_id=None):
             """Erstellt einen Werkzeug-Button mit benutzerdefiniertem Icon oder Fallback"""
             if tool_id:
@@ -498,7 +505,6 @@ class EditorWindow(Gtk.Window):
                 btn = Gtk.Button()
                 btn.set_size_request(40, 40)
             
-            # Fallback-System-Icon-Namen
             fallback_icons = {
                 Tool.LINE: "draw-line",
                 Tool.RECT: "gtk-justify-center",
@@ -506,10 +512,10 @@ class EditorWindow(Gtk.Window):
                 Tool.ARROW: "go-next",
                 Tool.TEXT: "font-x-generic",
                 Tool.MAGNIFIER: "zoom-in",
-                Tool.MARKER: "marker"
+                Tool.MARKER: "marker",
+                Tool.FREEHAND: "input-tablet",  # Fallback f\u00fcr Freihand
             }
             
-            # Versuche benutzerdefinierte Icons
             icon_loaded = False
             pixmaps_dir = "/usr/share/pixmaps/"
             
@@ -526,14 +532,12 @@ class EditorWindow(Gtk.Window):
                         print(f"Konnte Icon {icon_path} nicht laden: {e}")
                         continue
             
-            # Falls kein benutzerdefiniertes Icon, System-Icon verwenden
             if not icon_loaded and tool_id:
                 try:
                     fallback_icon = fallback_icons.get(tool_id, "image-missing")
                     image = Gtk.Image.new_from_icon_name(fallback_icon, Gtk.IconSize.LARGE_TOOLBAR)
                     btn.add(image)
                 except:
-                    # Letzter Fallback: Text
                     btn = Gtk.Button(label=label[:3])
                     if tool_id:
                         btn.connect("toggled", self.on_tool_toggled, tool_id)
@@ -542,10 +546,8 @@ class EditorWindow(Gtk.Window):
             btn.get_style_context().add_class("tool-button")
             return btn
 
-        # Werkzeug-Buttons Gruppe
         self.tool_group = []
         
-        # Werkzeuge mit benutzerdefinierten Icons erstellen
         line_btn = create_tool_button_with_custom_icon(
             ["Linie.png", "line.png", "Line.png"], "Linie", Tool.LINE
         )
@@ -569,17 +571,20 @@ class EditorWindow(Gtk.Window):
             ["Lupe.png", "lupe.png", "magnifier.png", "zoom.png"], 
             "Lupe", Tool.MAGNIFIER
         )
-        
-        # NEU: Marker-Button mit eigenem Icon
         marker_btn = create_tool_button_with_custom_icon(
             ["Marker.png", "marker.png", "highlighter.png"], 
             "Marker", Tool.MARKER
         )
-        
-        # NEU: Undo/Redo mit eigenen Icons
+
+        # NEU: Freihand-Button
+        freehand_btn = create_tool_button_with_custom_icon(
+            ["Freihand.png", "freihand.png", "freehand.png", "pencil.png", "Pinsel.png"],
+            "Freihand malen", Tool.FREEHAND
+        )
+
         undo_btn = create_tool_button_with_custom_icon(
-            ["zurück.png", "zurueck.png", "undo.png", "Undo.png"], 
-            "Rückgängig", None
+            ["zur\u00fcck.png", "zurueck.png", "undo.png", "Undo.png"], 
+            "R\u00fcckg\u00e4ngig", None
         )
         undo_btn.connect("clicked", self.on_undo_clicked)
         
@@ -589,7 +594,6 @@ class EditorWindow(Gtk.Window):
         )
         redo_btn.connect("clicked", self.on_redo_clicked)
         
-        # Farbauswahl
         color_btn = Gtk.ColorButton()
         color_btn.set_rgba(Gdk.RGBA(*self.current_color))
         color_btn.set_tooltip_text("Farbe")
@@ -597,99 +601,85 @@ class EditorWindow(Gtk.Window):
         color_btn.connect("color-set", self.on_color_set)
         color_btn.get_style_context().add_class("color-button")
         
-        # Liniendicke
+        linewidth_box = Gtk.VBox(spacing=2)
+        linewidth_label = Gtk.Label()
+        linewidth_label.set_markup("<span size='small'>Strichgr\u00f6\u00dfe</span>")
         linewidth_combo = Gtk.ComboBoxText()
         linewidth_combo.set_tooltip_text("Liniendicke")
         linewidth_combo.set_size_request(80, 30)
         for w in self.line_widths:
             linewidth_combo.append_text(f"{w} px")
-        linewidth_combo.set_active(2)  # 3px
+        linewidth_combo.set_active(2)
         linewidth_combo.connect("changed", self.on_linewidth_changed)
         linewidth_combo.get_style_context().add_class("combobox")
+        linewidth_box.pack_start(linewidth_label, False, False, 0)
+        linewidth_box.pack_start(linewidth_combo, False, False, 0)
         
-        # Textgröße
+        textsize_box = Gtk.VBox(spacing=2)
+        textsize_label = Gtk.Label()
+        textsize_label.set_markup("<span size='small'>Schriftgr\u00f6\u00dfe</span>")
         textsize_combo = Gtk.ComboBoxText()
-        textsize_combo.set_tooltip_text("Textgröße")
+        textsize_combo.set_tooltip_text("Textgr\u00f6\u00dfe")
         textsize_combo.set_size_request(80, 30)
         for s in self.font_sizes:
             textsize_combo.append_text(f"{s} pt")
-        textsize_combo.set_active(5)  # 24pt
+        textsize_combo.set_active(5)
         textsize_combo.connect("changed", self.on_textsize_changed)
         textsize_combo.get_style_context().add_class("combobox")
+        textsize_box.pack_start(textsize_label, False, False, 0)
+        textsize_box.pack_start(textsize_combo, False, False, 0)
         
-        # Vergrößerungsfaktor für Lupe
+        magnifier_box = Gtk.VBox(spacing=2)
+        magnifier_label = Gtk.Label()
+        magnifier_label.set_markup("<span size='small'>Lupenvergr\u00f6\u00dferung</span>")
         magnifier_combo = Gtk.ComboBoxText()
-        magnifier_combo.set_tooltip_text("Vergrößerung")
-        magnifier_combo.set_size_request(80, 30)
+        magnifier_combo.set_tooltip_text("Vergr\u00f6\u00dferung")
+        magnifier_combo.set_size_request(100, 30)
         for scale in self.magnifier_scales:
-            magnifier_combo.append_text(f"{scale:.1f}×")
-        magnifier_combo.set_active(1)  # 2.0x
+            magnifier_combo.append_text(f"{scale:.1f}\u00d7")
+        magnifier_combo.set_active(1)
         magnifier_combo.connect("changed", self.on_magnifier_changed)
         magnifier_combo.get_style_context().add_class("combobox")
-        
-        # Speichern-Button in HeaderBar
-        save_btn = Gtk.Button.new_with_label("Speichern")
-        save_btn.get_style_context().add_class("suggested-action")
-        save_btn.connect("clicked", self.on_save_clicked)
-        header_bar.pack_end(save_btn)
-        
-        # Abbrechen-Button in HeaderBar (nur im Request-Modus)
-        if self.request_mode:
-            cancel_btn = Gtk.Button.new_with_label("Abbrechen")
-            cancel_btn.connect("clicked", lambda w: self.on_cancel_clicked())
-            header_bar.pack_start(cancel_btn)
-        else:
-            # Im normalen Modus: Info-Button
-            info_btn = Gtk.Button.new_with_label("Info")
-            info_btn.connect("clicked", lambda w: self.show_info())
-            header_bar.pack_start(info_btn)
+        magnifier_box.pack_start(magnifier_label, False, False, 0)
+        magnifier_box.pack_start(magnifier_combo, False, False, 0)
 
-        # Werkzeuge zur Toolbar hinzufügen (inklusive Marker und Undo/Redo mit neuen Icons)
-        for btn in [line_btn, rect_btn, ellipse_btn, arrow_btn, text_btn, 
-                   marker_btn, magnifier_btn,
-                   Gtk.SeparatorToolItem(), color_btn, 
+        # Werkzeuge zur Toolbar hinzuf\u00fcgen \u2014 freehand_btn neu integriert
+        for btn in [line_btn, rect_btn, ellipse_btn, arrow_btn, text_btn,
+                   marker_btn, freehand_btn, magnifier_btn,
+                   Gtk.SeparatorToolItem(), color_btn,
                    Gtk.SeparatorToolItem(), undo_btn, redo_btn,
-                   Gtk.SeparatorToolItem(), linewidth_combo,
-                   Gtk.SeparatorToolItem(), textsize_combo,
-                   Gtk.SeparatorToolItem(), magnifier_combo]:
+                   Gtk.SeparatorToolItem(), linewidth_box,
+                   Gtk.SeparatorToolItem(), textsize_box,
+                   Gtk.SeparatorToolItem(), magnifier_box]:
             if isinstance(btn, Gtk.Widget):
-                if isinstance(btn, (Gtk.Button, Gtk.ComboBoxText, Gtk.ToggleButton, Gtk.ColorButton)):
+                if isinstance(btn, (Gtk.Button, Gtk.ComboBoxText, Gtk.ToggleButton, Gtk.ColorButton, Gtk.VBox)):
                     container = Gtk.ToolItem()
                     container.add(btn)
                     toolbar.add(container)
                 else:
                     toolbar.add(btn)
 
-        # Zoom-Variablen initialisieren
         self.zoom_level = 1.0
         self.min_zoom = 0.1
         self.max_zoom = 10.0
         self.zoom_step = 0.1
         
-        # Zentrierung des Fensters erzwingen
         self.connect("configure-event", self.on_configure_event)
-        # Fenstergröße anpassen, nachdem es angezeigt wurde
         self.connect("show", self.on_show)
 
     def on_configure_event(self, widget, event):
-        """Stellt sicher, dass das Fenster zentriert bleibt"""
-        # Hier könnte man zusätzliche Zentrierungslogik hinzufügen
         pass
 
     def on_show(self, widget):
-        """Passt die Fenstergröße nach dem Anzeigen an"""
-        # Fenstergröße basierend auf Bildgröße anpassen
         screen = Gdk.Screen.get_default()
         screen_width = screen.get_width()
         screen_height = screen.get_height()
         
-        # Maximal 90% des Bildschirms verwenden
         max_width = int(screen_width * 0.9)
         max_height = int(screen_height * 0.9)
         
-        # Fenstergröße basierend auf Bildgröße + Platz für Werkzeugleiste berechnen
-        toolbar_height = 100  # Geschätzte Höhe der Werkzeugleiste
-        header_height = 40    # Geschätzte Höhe der HeaderBar
+        toolbar_height = 100
+        header_height = 40
         
         window_width = min(self.image_width + 40, max_width)
         window_height = min(self.image_height + toolbar_height + header_height + 40, max_height)
@@ -705,103 +695,82 @@ class EditorWindow(Gtk.Window):
         cr.paint()
         return surface
 
-    # ------------------- Hilfsfunktionen für Zoom-Koordinaten -------------------
+    # ------------------- Beenden -------------------
+    
+    def on_quit_clicked(self, btn):
+        if self.request_mode:
+            print(json.dumps({"status": "cancelled", "file": None}))
+        self.destroy()
+        Gtk.main_quit()
+
+    # ------------------- Zoom-Koordinaten -------------------
     
     def screen_to_image_coords(self, screen_x, screen_y):
-        """Konvertiert Bildschirmkoordinaten (Maus) in Bildkoordinaten unter Berücksichtigung von Zoom und Zentrierung"""
-        # Größe des Zeichenbereichs abrufen
         alloc = self.drawing_area.get_allocation()
-        
-        # Berechnung der Zentrierungs-Offsets
         offset_x = (alloc.width - self.image_width * self.zoom_level) / 2
         offset_y = (alloc.height - self.image_height * self.zoom_level) / 2
-        
-        # Mauskoordinaten in Bildkoordinaten umrechnen
         image_x = (screen_x - offset_x) / self.zoom_level
         image_y = (screen_y - offset_y) / self.zoom_level
-        
-        # Sicherstellen, dass die Koordinaten innerhalb des Bildes liegen
         image_x = max(0, min(image_x, self.image_width))
         image_y = max(0, min(image_y, self.image_height))
-        
         return image_x, image_y
 
-    # ------------------- Zoom-Funktion -------------------
+    # ------------------- Zoom -------------------
     
     def on_scroll_event(self, widget, event):
-        """Behandelt Mausrad-Events für Zoom mit Strg-Taste"""
-        # Prüfen ob Strg-Taste gedrückt ist
         ctrl_pressed = event.state & Gdk.ModifierType.CONTROL_MASK
-        
         if ctrl_pressed:
-            # Zoom-Funktion
             if event.direction == Gdk.ScrollDirection.UP:
-                # Hineinzoomen
                 self.zoom_in()
             elif event.direction == Gdk.ScrollDirection.DOWN:
-                # Herauszoomen
                 self.zoom_out()
-            return True  # Event behandelt
-        return False  # Event nicht behandelt, weitergeben
+            return True
+        return False
     
     def zoom_in(self):
-        """Vergrößert das Bild"""
         if self.zoom_level < self.max_zoom:
             self.zoom_level += self.zoom_step
             self.update_zoom()
     
     def zoom_out(self):
-        """Verkleinert das Bild"""
         if self.zoom_level > self.min_zoom:
             self.zoom_level -= self.zoom_step
             self.update_zoom()
     
     def update_zoom(self):
-        """Aktualisiert die Anzeige nach Zoom-Änderung"""
-        # Größe des Zeichenbereichs anpassen
         width = int(self.image_width * self.zoom_level)
         height = int(self.image_height * self.zoom_level)
-        
         self.drawing_area.set_size_request(width, height)
         self.drawing_area.queue_draw()
-        
-        # Fenstertitel aktualisieren mit Zoom-Level
         zoom_percent = int(self.zoom_level * 100)
         self.set_title(f"GuideOS Bildschirmfoto-Editor ({zoom_percent}%)")
 
     # ------------------- Zeichnen -------------------
 
     def on_draw(self, widget, cr):
-        # Den Zeichenbereich abrufen
         alloc = widget.get_allocation()
-        
-        # Bild in der Mitte des Zeichenbereichs zeichnen
         offset_x = (alloc.width - self.image_width * self.zoom_level) / 2
         offset_y = (alloc.height - self.image_height * self.zoom_level) / 2
-        
-        # Auf die Bildposition verschieben
         cr.translate(offset_x, offset_y)
-        
-        # Skalierung für Zoom anwenden
         cr.scale(self.zoom_level, self.zoom_level)
         
-        # Hintergrundbild zeichnen
         cr.set_source_surface(self.background_surface, 0, 0)
         cr.paint()
 
-        # Alle gespeicherten Formen zeichnen
         for s in self.shapes:
             self.draw_shape(cr, s)
 
-        # Aktuelle Zeichnung anzeigen (während des Zeichnens)
+        # Aktuelle Zeichnung live anzeigen
         if self.drawing:
             if self.current_tool == Tool.MAGNIFIER:
-                # Für Lupe müssen die Koordinaten ebenfalls korrigiert werden
                 img_start_x, img_start_y = self.screen_to_image_coords(self.start_x, self.start_y)
                 img_current_x, img_current_y = self.screen_to_image_coords(self.current_x, self.current_y)
                 self.draw_magnifier(cr, img_start_x, img_start_y, img_current_x, img_current_y)
+            elif self.current_tool == Tool.FREEHAND:
+                # NEU: Freihand-Vorschau w\u00e4hrend des Zeichnens
+                if len(self.freehand_points) > 1:
+                    self.draw_freehand_points(cr, self.freehand_points, self.current_color, self.current_line_width)
             elif self.current_tool != Tool.TEXT:
-                # Koordinaten für temporäre Form korrigieren
                 img_start_x, img_start_y = self.screen_to_image_coords(self.start_x, self.start_y)
                 img_current_x, img_current_y = self.screen_to_image_coords(self.current_x, self.current_y)
                 temp = self.make_shape(
@@ -813,7 +782,7 @@ class EditorWindow(Gtk.Window):
                 )
                 self.draw_shape(cr, temp)
 
-    def make_shape(self, tool, x1, y1, x2, y2, text=None):
+    def make_shape(self, tool, x1, y1, x2, y2, text=None, points=None):
         return {
             "type": tool,
             "x1": x1,
@@ -824,23 +793,23 @@ class EditorWindow(Gtk.Window):
             "width": self.current_line_width,
             "text": text,
             "text_size": self.current_text_size,
+            "points": points,  # NEU: f\u00fcr Freihand-Pfad
         }
 
     def draw_shape(self, cr, s):
         cr.set_source_rgba(*s["color"])
-        
-        # NEU: Für Marker breitere Linie und halbtransparente Farbe
-        if s["type"] == Tool.MARKER:
-            # Marker hat eine breitere Linie
-            marker_width = s["width"] * 3  # Marker ist 3x dicker als normale Linien
+
+        if s["type"] == Tool.FREEHAND:
+            # NEU: Freihand-Pfad zeichnen
+            points = s.get("points", [])
+            if len(points) > 1:
+                self.draw_freehand_points(cr, points, s["color"], s["width"])
+
+        elif s["type"] == Tool.MARKER:
+            marker_width = s["width"] * 3
             cr.set_line_width(marker_width)
-            
-            # Marker-Farbe halbtransparent machen für "Marker-Effekt"
             r, g, b, a = s["color"]
-            cr.set_source_rgba(r, g, b, a * 0.4)  # 40% Deckkraft
-            
-            # Marker zeichnen (wie eine freihand Linie zwischen Start und Endpunkt)
-            # Für einen einfachen Marker zeichnen wir einfach eine dicke Linie
+            cr.set_source_rgba(r, g, b, a * 0.4)
             cr.move_to(s["x1"], s["y1"])
             cr.line_to(s["x2"], s["y2"])
             cr.stroke()
@@ -884,7 +853,29 @@ class EditorWindow(Gtk.Window):
             cr.move_to(s["x1"], s["y1"])
             cr.show_text(s["text"])
             cr.stroke()
-            
+
+    def draw_freehand_points(self, cr, points, color, line_width):
+        """Zeichnet einen glatten Freihand-Pfad durch die gegebenen Punkte"""
+        if len(points) < 2:
+            return
+        cr.set_source_rgba(*color)
+        cr.set_line_width(line_width)
+        cr.set_line_cap(cairo.LINE_CAP_ROUND)
+        cr.set_line_join(cairo.LINE_JOIN_ROUND)
+        cr.move_to(points[0][0], points[0][1])
+        # Glatte Kurve durch alle Punkte mit quadratischen Bezier-Kurven
+        for i in range(1, len(points) - 1):
+            mid_x = (points[i][0] + points[i + 1][0]) / 2
+            mid_y = (points[i][1] + points[i + 1][1]) / 2
+            cx, cy = points[i][0], points[i][1]
+            cr.curve_to(cx, cy, cx, cy, mid_x, mid_y)
+        # Letzten Punkt direkt verbinden
+        cr.line_to(points[-1][0], points[-1][1])
+        cr.stroke()
+        # Line-Cap und Join zur\u00fccksetzen
+        cr.set_line_cap(cairo.LINE_CAP_BUTT)
+        cr.set_line_join(cairo.LINE_JOIN_MITER)
+
     def draw_arrow(self, cr, x1, y1, x2, y2):
         cr.move_to(x1, y1)
         cr.line_to(x2, y2)
@@ -902,22 +893,18 @@ class EditorWindow(Gtk.Window):
         cr.stroke()
 
     def draw_magnifier(self, cr, x1, y1, x2, y2):
-        """Zeichnet eine Lupe mit vergrößertem Bereich"""
-        size = 150  # Größe der Lupe
+        size = 150
         
-        # Rahmen der Lupe
         cr.set_source_rgba(0, 0, 0, 0.7)
         cr.set_line_width(2)
         cr.arc(x2, y2, size/2, 0, 2 * math.pi)
         cr.stroke()
         
-        # Vergrößerten Bereich zeichnen
         scale = self.magnifier_scale
         source_x = x2 - (size/2) / scale
         source_y = y2 - (size/2) / scale
         source_size = size / scale
         
-        # Sicherstellen, dass der Bereich innerhalb des Bildes liegt
         if source_x < 0:
             source_x = 0
         if source_y < 0:
@@ -927,27 +914,18 @@ class EditorWindow(Gtk.Window):
         if source_y + source_size > self.image_height:
             source_y = self.image_height - source_size
         
-        # Vergrößerten Bereich zeichnen
         cr.save()
         cr.arc(x2, y2, size/2 - 2, 0, 2 * math.pi)
         cr.clip()
-        
-        # Transformieren für den vergrößerten Bereich
         cr.translate(x2, y2)
         cr.scale(scale, scale)
         cr.translate(-source_x - source_size/2, -source_y - source_size/2)
-        
-        # Hintergrundbild zeichnen
         cr.set_source_surface(self.background_surface, 0, 0)
         cr.paint()
-
-        # Alle Annotationen zeichnen (inklusive Marker)
         for shape in self.shapes:
             self.draw_shape(cr, shape)
-        
         cr.restore()
         
-        # Kreuz für genaue Position
         cr.set_source_rgba(1, 0, 0, 0.8)
         cr.set_line_width(2)
         cr.move_to(x2, y2 - 10)
@@ -961,12 +939,10 @@ class EditorWindow(Gtk.Window):
     def on_button_press(self, widget, event):
         if event.button == 1:
             if self.current_tool == Tool.TEXT:
-                # Für Text müssen die Koordinaten korrigiert werden
                 img_x, img_y = self.screen_to_image_coords(event.x, event.y)
                 self.show_text_popup(img_x, img_y)
                 return
-        
-            # Nur zeichnen wenn ein Tool aktiv ist
+
             if self.current_tool is not None:
                 self.drawing = True
                 self.start_x = event.x
@@ -974,21 +950,49 @@ class EditorWindow(Gtk.Window):
                 self.current_x = event.x
                 self.current_y = event.y
 
+                # NEU: Freihand-Punkte zur\u00fccksetzen und Startpunkt hinzuf\u00fcgen
+                if self.current_tool == Tool.FREEHAND:
+                    img_x, img_y = self.screen_to_image_coords(event.x, event.y)
+                    self.freehand_points = [(img_x, img_y)]
+
     def on_mouse_move(self, widget, event):
         if self.drawing:
             self.current_x = event.x
             self.current_y = event.y
+
+            # NEU: Freihand-Punkt sammeln
+            if self.current_tool == Tool.FREEHAND:
+                img_x, img_y = self.screen_to_image_coords(event.x, event.y)
+                self.freehand_points.append((img_x, img_y))
+
             self.drawing_area.queue_draw()
 
     def on_button_release(self, widget, event):
         if self.drawing and event.button == 1:
             self.drawing = False
-            
+
             if self.current_tool == Tool.MAGNIFIER:
-                # Für Lupe kein Shape speichern, nur anzeigen
-                pass
+                pass  # Lupe wird nicht gespeichert
+
+            elif self.current_tool == Tool.FREEHAND:
+                # NEU: Freihand-Form mit allen Punkten speichern
+                if len(self.freehand_points) > 1:
+                    img_x, img_y = self.screen_to_image_coords(event.x, event.y)
+                    self.freehand_points.append((img_x, img_y))
+                    shape = self.make_shape(
+                        Tool.FREEHAND,
+                        self.freehand_points[0][0],
+                        self.freehand_points[0][1],
+                        self.freehand_points[-1][0],
+                        self.freehand_points[-1][1],
+                        points=list(self.freehand_points)
+                    )
+                    self.shapes.append(shape)
+                    self.undo_stack.append(shape)
+                    self.redo_stack.clear()
+                self.freehand_points = []
+
             else:
-                # Koordinaten für gespeicherte Form korrigieren
                 img_start_x, img_start_y = self.screen_to_image_coords(self.start_x, self.start_y)
                 img_current_x, img_current_y = self.screen_to_image_coords(event.x, event.y)
                 shape = self.make_shape(
@@ -1014,23 +1018,18 @@ class EditorWindow(Gtk.Window):
             destroy_with_parent=True
         )
         dialog.set_default_size(300, 100)
-        
         box = dialog.get_content_area()
         box.set_spacing(10)
         box.set_border_width(10)
-        
         entry = Gtk.Entry()
         entry.set_placeholder_text("Text hier eingeben...")
         entry.set_activates_default(True)
         box.add(entry)
-
         dialog.add_button("Abbrechen", Gtk.ResponseType.CANCEL)
         dialog.add_button("OK", Gtk.ResponseType.OK)
         dialog.set_default_response(Gtk.ResponseType.OK)
-
         dialog.show_all()
         response = dialog.run()
-
         if response == Gtk.ResponseType.OK:
             text = entry.get_text().strip()
             if text:
@@ -1039,32 +1038,23 @@ class EditorWindow(Gtk.Window):
                 self.undo_stack.append(shape)
                 self.redo_stack.clear()
                 self.drawing_area.queue_draw()
-
         dialog.destroy()
 
     # ------------------- Werkzeug-Handler -------------------
 
     def on_tool_toggled(self, btn, tool_id):
         if btn.get_active():
-            # Tool aktivieren
             self.current_tool = tool_id
-            # Deaktiviere andere Buttons in der Gruppe
             for other_btn in self.tool_group:
                 if other_btn != btn and other_btn.get_active():
                     other_btn.set_active(False)
         else:
-            # Wenn Button deaktiviert wird, kein aktives Tool mehr
             if self.current_tool == tool_id:
                 self.current_tool = None
 
     def on_color_set(self, color_button):
         color = color_button.get_rgba()
-        self.current_color = (
-            color.red,
-            color.green,
-            color.blue,
-            color.alpha,
-        )
+        self.current_color = (color.red, color.green, color.blue, color.alpha)
 
     def on_linewidth_changed(self, combo):
         index = combo.get_active()
@@ -1095,6 +1085,70 @@ class EditorWindow(Gtk.Window):
             self.shapes.append(s)
             self.drawing_area.queue_draw()
 
+    # ------------------- Zwischenablage -------------------
+    
+    def on_clipboard_clicked(self, btn):
+        try:
+            width = self.image_width
+            height = self.image_height
+            surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+            cr = cairo.Context(surface)
+            cr.set_source_surface(self.background_surface, 0, 0)
+            cr.paint()
+            for shape in self.shapes:
+                self.draw_shape(cr, shape)
+            
+            import array
+            data = surface.get_data()
+            stride = surface.get_stride()
+            rgb_data = array.array('B')
+            for y in range(height):
+                for x in range(width):
+                    offset = y * stride + x * 4
+                    b = data[offset + 0]
+                    g = data[offset + 1]
+                    r = data[offset + 2]
+                    a = data[offset + 3]
+                    rgb_data.append(r)
+                    rgb_data.append(g)
+                    rgb_data.append(b)
+                    rgb_data.append(a)
+            
+            pixbuf = GdkPixbuf.Pixbuf.new_from_data(
+                rgb_data.tobytes(),
+                GdkPixbuf.Colorspace.RGB,
+                True, 8, width, height, width * 4
+            )
+            clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
+            clipboard.set_image(pixbuf)
+            clipboard.store()
+            
+            message_dialog = Gtk.MessageDialog(
+                transient_for=self, flags=0,
+                message_type=Gtk.MessageType.INFO,
+                buttons=Gtk.ButtonsType.OK,
+                text="In Zwischenablage kopiert"
+            )
+            message_dialog.format_secondary_text(
+                "Das Bild wurde in die Zwischenablage kopiert und kann nun in andere Anwendungen eingef\u00fcgt werden."
+            )
+            label = message_dialog.get_message_area().get_children()[0]
+            label.set_markup('<span background="#2573bf" foreground="white" weight="bold" size="large"> In Zwischenablage kopiert </span>')
+            message_dialog.run()
+            message_dialog.destroy()
+            print("Bild erfolgreich in die Zwischenablage kopiert.")
+        except Exception as e:
+            error_dialog = Gtk.MessageDialog(
+                transient_for=self, flags=0,
+                message_type=Gtk.MessageType.ERROR,
+                buttons=Gtk.ButtonsType.OK,
+                text="Fehler beim Kopieren"
+            )
+            error_dialog.format_secondary_text(f"Das Bild konnte nicht in die Zwischenablage kopiert werden:\n{str(e)}")
+            error_dialog.run()
+            error_dialog.destroy()
+            print(f"Fehler beim Kopieren in Zwischenablage: {e}")
+
     # ------------------- Speichern -------------------
 
     def on_save_clicked(self, btn):
@@ -1107,58 +1161,35 @@ class EditorWindow(Gtk.Window):
                 "Speichern", Gtk.ResponseType.OK
             )
         )
-        
         dialog.set_default_response(Gtk.ResponseType.OK)
-        
-        # Vorgeschlagener Dateiname mit Zeitstempel
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         dialog.set_current_name(f"screenshot_{timestamp}.png")
-        
-        # Filter für PNG
         filter_png = Gtk.FileFilter()
         filter_png.set_name("PNG Bilder")
         filter_png.add_mime_type("image/png")
         filter_png.add_pattern("*.png")
         dialog.add_filter(filter_png)
-        
         response = dialog.run()
-        
         if response == Gtk.ResponseType.OK:
             filename = dialog.get_filename()
-            
-            # Sicherstellen, dass die Datei mit .png endet
             if not filename.lower().endswith('.png'):
                 filename += '.png'
-            
-            # Bild zusammenstellen und speichern
             width = self.image_width
             height = self.image_height
-            
-            # Neue Cairo-Surface erstellen
             surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
             cr = cairo.Context(surface)
-            
-            # Hintergrund zeichnen
             cr.set_source_surface(self.background_surface, 0, 0)
             cr.paint()
-            
-            # Alle Formen zeichnen (inklusive Marker)
             for shape in self.shapes:
                 self.draw_shape(cr, shape)
-            
-            # Speichern
             surface.write_to_png(filename)
-            
             if self.request_mode:
-                # Im Request-Modus: Pfad ausgeben und beenden
                 print(json.dumps({"status": "success", "file": filename}))
                 self.destroy()
                 Gtk.main_quit()
             else:
-                # Erfolgsmeldung
                 message_dialog = Gtk.MessageDialog(
-                    transient_for=self,
-                    flags=0,
+                    transient_for=self, flags=0,
                     message_type=Gtk.MessageType.INFO,
                     buttons=Gtk.ButtonsType.OK,
                     text="Bild gespeichert"
@@ -1166,11 +1197,9 @@ class EditorWindow(Gtk.Window):
                 message_dialog.format_secondary_text(f"Datei gespeichert als:\n{filename}")
                 message_dialog.run()
                 message_dialog.destroy()
-        
         dialog.destroy()
 
     def on_cancel_clicked(self):
-        """Im Request-Modus abbrechen"""
         if self.request_mode:
             print(json.dumps({"status": "cancelled", "file": None}))
             self.destroy()
@@ -1179,31 +1208,34 @@ class EditorWindow(Gtk.Window):
             self.destroy()
 
     def show_info(self):
-        """Info-Dialog anzeigen"""
         dialog = Gtk.MessageDialog(
-            transient_for=self,
-            flags=0,
+            transient_for=self, flags=0,
             message_type=Gtk.MessageType.INFO,
             buttons=Gtk.ButtonsType.OK,
             text="GuideOS Bildschirmfoto-Editor"
         )
         dialog.format_secondary_text(
-            "Ein einfaches Screenshot-Tool für Cinnamon Desktop\n\n"
+            "Ein einfaches Screenshot-Tool f\u00fcr Cinnamon Desktop\n\n"
             "Verwendung:\n"
-            "1. Bereich auswählen\n"
+            "1. Bereich ausw\u00e4hlen\n"
             "2. Mit Werkzeugen annotieren\n"
-            "3. Speichern\n\n"
-            "Tastenkürzel:\n"
-            "• ESC: Abbrechen\n"
-            "• Enter/Space: Auswahl bestätigen\n"
-            "• Strg + Mausrad: Zoom\n\n"
+            "3. Speichern oder in Zwischenablage kopieren\n"
+            "4. Mit Beenden-Button Programm schlie\u00dfen\n\n"
+            "Tastenk\u00fcrzel:\n"
+            "\u2022 ESC: Abbrechen\n"
+            "\u2022 Enter/Space: Auswahl best\u00e4tigen\n"
+            "\u2022 Strg + Mausrad: Zoom\n\n"
             "Werkzeuge:\n"
-            "• Linie, Rechteck, Kreis, Pfeil, Text\n"
-            "• Marker: Halbtransparente Markierungen\n"
-            "• Lupe: Vergrößert Details\n\n"
+            "\u2022 Linie, Rechteck, Kreis, Pfeil, Text\n"
+            "\u2022 Marker: Halbtransparente Markierungen\n"
+            "\u2022 Freihand: Freies Malen mit der Maus\n"
+            "\u2022 Lupe: Vergr\u00f6\u00dfert Details\n\n"
             "Neue Funktionen:\n"
-            "• Multi-Monitor: Unterstützt mehrere Bildschirme\n"
-            "• Zoom: Strg + Mausrad für Vergrößerung/Verkleinerung"
+            "\u2022 Multi-Monitor: Unterst\u00fctzt mehrere Bildschirme\n"
+            "\u2022 Zoom: Strg + Mausrad f\u00fcr Vergr\u00f6\u00dferung/Verkleinerung\n"
+            "\u2022 Zwischenablage: Kopiert Bild direkt in die Zwischenablage\n"
+            "\u2022 Freihand: Freies Malen und Markieren\n"
+            "\u2022 Beenden: Programm komplett schlie\u00dfen"
         )
         dialog.run()
         dialog.destroy()
@@ -1212,10 +1244,7 @@ class EditorWindow(Gtk.Window):
 # ===================== Request-Sub-Process =====================
 
 def run_request_mode():
-    """Startet den Screenshot-Prozess im Request-Modus"""
     Gdk.init([])
-    
-    # Bereichsauswahl starten (mit Multi-Monitor-Unterstützung)
     selector = AreaSelectorWindow(multi_monitor=True)
     rect, monitor = selector.run()
     
@@ -1225,14 +1254,15 @@ def run_request_mode():
     
     x, y, w, h = rect
     
-    # Screenshot aufnehmen (mit Monitor-Info)
+    import time
+    time.sleep(0.2)
+    
     pixbuf = ScreenshotEngine.capture_area(x, y, w, h, monitor)
     
     if pixbuf is None:
         print(json.dumps({"status": "error", "message": "Screenshot fehlgeschlagen"}))
         return
     
-    # Editor starten (wird automatisch im angepassten Fenster geöffnet)
     editor = EditorWindow(pixbuf, request_mode=True)
     editor.connect("destroy", Gtk.main_quit)
     
@@ -1247,14 +1277,12 @@ def run_request_mode():
 class StartWindow(Gtk.Window):
     def __init__(self):
         super().__init__(title="GuideOS Bildschirmfoto-Editor")
-        # Breiteres, liegendes Rechteck (500x150 statt 400x150)
         self.set_default_size(400, 150)
         self.set_border_width(20)
         self.set_position(Gtk.WindowPosition.CENTER)
         self.set_resizable(False)
         self.set_default_icon_name("applets-screenshooter")
 
-        # CSS nur für spezifische Klassen, Theme wird vom System übernommen
         css_provider = Gtk.CssProvider()
         css = """
         .suggested-action {
@@ -1276,21 +1304,23 @@ class StartWindow(Gtk.Window):
         main_box = Gtk.VBox(spacing=20)
         self.add(main_box)
 
-        # HeaderBar für Cinnamon-Integration mit Fensterkontrollen
         header_bar = Gtk.HeaderBar()
         header_bar.set_show_close_button(True)
         header_bar.set_title("GuideOS Bildschirmfoto-Editor")
         self.set_titlebar(header_bar)
 
-        # Haupt-Button
-        btn_area = Gtk.Button.new_with_label("Anklicken, um einen Bereich auszuwählen")
+        btn_area = Gtk.Button.new_with_label("Anklicken, um einen Bereich auszuw\u00e4hlen")
         btn_area.get_style_context().add_class("suggested-action")
         btn_area.set_size_request(200, 50)
         btn_area.set_margin_top(10)
         btn_area.connect("clicked", self.on_area_clicked)
         main_box.pack_start(btn_area, True, True, 0)
 
-        # Info (korrigiert - ohne class-Attribut)
+        zoom_hint = Gtk.Label()
+        zoom_hint.set_markup("<span size='small' style='italic'>Tipp: Strg + Mausrad zum Zoomen im Editor</span>")
+        zoom_hint.set_margin_top(5)
+        main_box.pack_start(zoom_hint, False, False, 0)
+
         info_label = Gtk.Label()
         info_label.set_markup("<span size='small'></span>")
         info_label.set_margin_bottom(10)
@@ -1301,8 +1331,7 @@ class StartWindow(Gtk.Window):
     def open_editor_with_pixbuf(self, pixbuf):
         if pixbuf is None:
             error_dialog = Gtk.MessageDialog(
-                transient_for=self,
-                flags=0,
+                transient_for=self, flags=0,
                 message_type=Gtk.MessageType.ERROR,
                 buttons=Gtk.ButtonsType.OK,
                 text="Fehler beim Aufnehmen"
@@ -1323,10 +1352,8 @@ class StartWindow(Gtk.Window):
 
     def on_area_clicked(self, btn):
         self.hide()
-        
         while Gtk.events_pending():
             Gtk.main_iteration_do(False)
-        
         GLib.timeout_add(100, self.start_area_selection)
     
     def start_area_selection(self):
@@ -1338,8 +1365,7 @@ class StartWindow(Gtk.Window):
             return
         
         x, y, w, h = rect
-        
-        GLib.timeout_add(50, lambda: self.capture_area_delayed(x, y, w, h, monitor))
+        GLib.timeout_add(200, lambda: self.capture_area_delayed(x, y, w, h, monitor))
         return False
     
     def capture_area_delayed(self, x, y, w, h, monitor):
@@ -1353,14 +1379,11 @@ class StartWindow(Gtk.Window):
 def main():
     Gdk.init([])
     
-    # Prüfen, ob wir im Request-Modus sind
     if len(sys.argv) > 1 and sys.argv[1] == "--request":
         run_request_mode()
     else:
-        # Normales Startfenster
         win = StartWindow()
         win.connect("destroy", Gtk.main_quit)
-        
         try:
             Gtk.main()
         except KeyboardInterrupt:

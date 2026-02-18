@@ -5,6 +5,12 @@ Comment=Erweitertes Screenshot- und Annotationstool für GuideOS
 Exec=/bin/guideos-bildschirmfoto-editor.py
 Icon=/usr/sahre/pixmaps/guideos-bildschirmfoto-editor.png
 Terminal=false
-Categories=GuideOS;
+Categories=Graphics;GuideOS;
 StartupNotify=true
+
+# Unterstützte Bildformate
+MimeType=image/png;image/jpeg;image/jpg;image/webp;image/gif;image/bmp;image/tiff;image/x-xcf;image/x-portable-pixmap;image/x-portable-bitmap;image/x-portable-graymap;image/x-tga;image/x-icns;image/x-icon;
+
+# Optional: Suchbegriffe
+Keywords=Screenshot;Bild;Editor;Annotation;GuideOS;
 

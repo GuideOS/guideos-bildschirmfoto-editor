@@ -1,50 +1,78 @@
+
 # README.md  
 ## GuideOS Bildschirmfoto‑Editor  
-### Version 1.2 – 22.12.2025  
-**Autor:** evilware666 & Helga  
+### Version 1.8 – 18.02.2026  
+**Autoren:** evilware666 & Helga  
 **Lizenz:** MIT  
+**Datei:** `guideos-screenshot-editor.py`
 
-### Beschreibung  
-Erweiterte Version des GuideOS Screenshot‑Tools mit vollständiger Multi‑Monitor‑Unterstützung, präziser Bereichsauswahl, Wayland‑Fallback, Monitor‑Erkennung, Lupenwerkzeug, Annotationen (Linien, Rechtecke, Kreise, Pfeile, Text), Undo/Redo, Farbwahl, variablen Liniendicken, Textgrößen und PNG‑Export.  
-Unterstützt sowohl den normalen Modus als auch einen JSON‑basierten Request‑Modus für automatisierte Abläufe.
+Der **GuideOS Bildschirmfoto‑Editor** ist ein leistungsstarkes, erweitertes Screenshot‑ und Markup‑Tool für Linux.  
+Es kombiniert präzise Bildschirmaufnahme‑Funktionen mit einem vollwertigen Editor für Annotationen, Formen, Text, Freihand‑Zeichnung, Undo/Redo und PNG‑Export.  
+Das Tool unterstützt Multi‑Monitor‑Setups, Wayland‑Fallbacks und bietet zusätzlich einen JSON‑basierten Request‑Modus für automatisierte Abläufe.
+
+Ideal für Dokumentation, Support, Tutorials, Software‑Erklärungen und professionelle Markups.
 
 ---
 
 ## ✨ Hauptfunktionen
 
-### 🖼️ Screenshot‑Engine
-- Multi‑Monitor‑Erkennung mit korrekter Geometrie  
-- Bereichsauswahl mit Live‑Größenanzeige  
-- Monitor‑Info bei Multi‑Monitor‑Screenshots  
-- Wayland‑Fallback (falls `Gdk.pixbuf_get_from_window` fehlschlägt)  
-- Monitor‑Offsets werden korrekt berücksichtigt  
-- Auswahlfenster mit halbtransparentem Overlay
+### 🖥️ Multi‑Monitor‑Unterstützung
+- Erkennung aller angeschlossenen Monitore  
+- Korrekte Geometrie‑Berechnung (Offsets, Auflösungen, Positionen)  
+- Bereichsauswahl zeigt Monitor‑Nummer und Live‑Größe an  
+- Vollbild‑Overlay über alle Monitore  
 
-### 🖊️ Editor‑Funktionen
-- Werkzeuge:
-  - Linie  
-  - Rechteck  
-  - Ellipse  
-  - Pfeil  
-  - Text  
-  - Marker  
-  - Lupe (Magnifier)  
-- Undo/Redo  
-- Farbwahl  
+### 🔍 Präzise Bereichsauswahl
+- Halbtransparentes Overlay  
+- Live‑Anzeige von Breite × Höhe  
+- Escape = Abbrechen  
+- Enter/Space = Auswahl bestätigen  
+- Funktioniert auch bei Multi‑Monitor‑Setups  
+
+### 📸 Screenshot‑Engine
+- Bereichsaufnahme mit Monitor‑Offset‑Korrektur  
+- Fallback‑Mechanismus, falls `Gdk.pixbuf_get_from_window` fehlschlägt  
+- Wayland‑Fallback (sofern möglich)  
+- Rückgabe als Pixbuf für den Editor  
+
+---
+
+## 🖌️ Editor‑Funktionen
+
+### Zeichen‑Werkzeuge
+- **Linien**  
+- **Rechtecke**  
+- **Kreise/Ellipsen**  
+- **Pfeile**  
+- **Text** (mit frei wählbarer Schriftgröße)  
+- **Marker**  
+- **Freihand‑Malen** (NEU)  
+- **Lupe** (Magnifier) mit variabler Vergrößerung  
+
+### Bearbeitungs‑Funktionen
+- **Undo / Redo**  
+- Farbwahl über ColorButton  
 - Variable Liniendicken  
-- Variable Textgrößen  
-- Vergrößerungsfaktor für Lupe einstellbar  
-- Zoomfunktion (Strg + Mausrad)  
-- Zentrierte Werkzeugleiste  
-- Cinnamon‑kompatibles CSS‑Styling (#2573bf)
+- Zoom (STRG + Mausrad)  
+- Zentrierte Darstellung im Editor  
+- Export als PNG mit Zeitstempel  
+- Kopieren in die Zwischenablage  
 
-### 💾 Export & Automatisierung
-- PNG‑Export mit Zeitstempel  
-- Dateidialog für benutzerdefinierten Speicherort  
-- JSON‑Request‑Modus:
-  - Startbar mit JSON‑Input  
-  - Gibt nach Bearbeitung JSON‑Output zurück  
-  - Ideal für Dokumentation, Support‑Tools, Automatisierung
+---
+
+## 🧰 JSON‑Request‑Modus (Automatisierung)
+Der Editor kann im **Request‑Modus** laufen, um automatisiert Screenshots zu erstellen und als JSON zurückzugeben.
+
+Beispiel‑Workflow:
+- Tool wird mit Parametern gestartet  
+- Screenshot wird automatisch erstellt  
+- Editor läuft im Hintergrund  
+- JSON‑Antwort enthält Pfad oder Status  
+
+Ideal für:
+- Automatisierte Dokumentation  
+- CI‑Pipelines  
+- Remote‑Support‑Tools  
 
 ---
 
@@ -52,40 +80,47 @@ Unterstützt sowohl den normalen Modus als auch einen JSON‑basierten Request�
 
 ### Voraussetzungen
 - Python 3  
-- GTK3 + GObject Introspection  
-- Cairo  
-- Pango  
+- GTK 3 (`python3-gi`)  
+- Cairo (`python3-cairo`)  
+- GdkPixbuf  
+- Optional: Wayland‑Kompatibilität  
 
-### Benötigte Pakete (Debian/Ubuntu)
+### Installation (Debian/Ubuntu/GuideOS)
 ```bash
-sudo apt install python3-gi python3-cairo gir1.2-gtk-3.0 gir1.2-pango-1.0
+sudo apt install python3-gi python3-cairo gir1.2-gtk-3.0
 ```
 
 ### Starten
 ```bash
-python3 screenshot_editor.py
+python3 guideos-screenshot-editor.py
+```
+
+oder ausführbar machen:
+
+```bash
+chmod +x guideos-screenshot-editor.py
+./guideos-screenshot-editor.py
 ```
 
 ---
 
 ## ▶️ Bedienung
 
-### Bereichsauswahl
-1. Programm starten  
-2. Auswahlfenster erscheint im Vollbild  
-3. Mit der Maus einen Bereich ziehen  
-4. Größe wird live angezeigt  
-5. Enter → Auswahl bestätigen  
-6. Escape → Abbrechen  
+### 1. Bereich auswählen  
+- Maus ziehen → Auswahl  
+- Escape → Abbrechen  
+- Enter → Bestätigen  
 
-### Editor
-- Werkzeugleiste ist zentriert unter dem Screenshot  
-- Werkzeuge per Klick aktivieren  
-- Zeichnen durch Klicken & Ziehen  
-- Text durch Klick setzen  
-- Lupe durch Ziehen bewegen  
-- Zoom mit **Strg + Mausrad**  
-- Speichern über den Header‑Button  
+### 2. Screenshot erscheint im Editor  
+- Werkzeuge auswählen  
+- Markierungen setzen  
+- Undo/Redo nutzen  
+- Zoom verwenden  
+
+### 3. Export  
+- PNG speichern  
+- In Zwischenablage kopieren  
+- Im Request‑Modus: JSON‑Antwort  
 
 ---
 
@@ -93,24 +128,18 @@ python3 screenshot_editor.py
 
 | Komponente | Beschreibung |
 |-----------|--------------|
-| `ScreenshotEngine` | Screenshot‑Erfassung, Monitor‑Infos |
-| `AreaSelectorWindow` | Vollbild‑Auswahlfenster |
+| `ScreenshotEngine` | Bereichsaufnahme, Multi‑Monitor‑Geometrie |
+| `AreaSelectorWindow` | Vollbild‑Overlay für Auswahl |
+| `EditorWindow` | Haupteditor mit Werkzeugen |
 | `Tool` | Werkzeug‑Konstanten |
-| `EditorWindow` | Haupteditor mit Werkzeugleiste |
-| Cairo‑Zeichenlogik | Rendering von Formen, Text, Lupe |
-| JSON‑Modus | Automatisierte Screenshot‑Workflows |
+| Zeichenfunktionen | Linien, Rechtecke, Kreise, Pfeile, Text, Marker, Freihand |
+| Undo/Redo | Stapelverwaltung |
+| Export | PNG‑Speicherung, Clipboard |
 
 ---
 
-## 🛠️ Technologien
-- **GTK3** (UI)  
-- **GdkPixbuf** (Screenshots)  
-- **Cairo** (Zeichnen)  
-- **Pango** (Text)  
-- **JSON** (Request‑Modus)  
+## 📄 Lizenz (MIT)
 
----
-
-## 📄 Lizenz
-MIT‑Lizenz — freie Nutzung, Anpassung und Weitergabe erlaubt.
+```
+MIT License
 
