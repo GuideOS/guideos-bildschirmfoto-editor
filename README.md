@@ -1,60 +1,83 @@
-# guideos-bildschirmfoto-editor[README.md](https://github.com/user-attachments/files/24281242/README.md)
 
 
-## Übersicht
-Der **GuideOS Bildschirmfoto-Editor** ist ein vollständiges Screenshot- und Annotierungswerkzeug für GuideOS und Cinnamon-basierte Systeme.  
-Er kombiniert eine präzise Bereichsauswahl mit einem leistungsfähigen Editor, der Linien, Rechtecke, Ellipsen, Pfeile und Text unterstützt.  
-Das Tool ist vollständig GTK-basiert und bietet Undo/Redo, Farbauswahl, Liniendicke, Zwischenablage,Textgröße sowie einen modernen Cinnamon-Look.
+# GuideOS Bildschirmfoto‑Editor
 
-## Funktionen
+Ein erweiterter Screenshot‑Editor für Linux mit Multi‑Monitor‑Support, präziser Bereichsauswahl, umfangreichen Zeichen‑ und Markierungswerkzeugen sowie Export‑ und JSON‑Request‑Modus. Entwickelt von **evilware666 & Helga**.
 
-### Bereichsauswahl
-- Halbtransparente Overlay-Auswahl  
-- Live-Anzeige der Auswahlgröße  
-- ESC zum Abbrechen  
-- Enter/Space zum Bestätigen  
+# Entwickler: 
+evilware666 & Helga
 
-### Screenshot-Engine
-- Aufnahme eines beliebigen Bildschirmbereichs  
-- Fallback für Wayland (Vollbild → Subpixbuf)  
+# Version:
+2.0
+---
 
-### Editor
-- Werkzeuge:
-  - Linie  
-  - Rechteck  
-  - Ellipse  
-  - Pfeil  
-  - Text  
-- Undo/Redo  
-- Farbauswahl  
-- Liniendicke einstellbar  
-- Textgröße einstellbar  
-- Cinnamon-kompatible Icons und CSS  
-- Scrollbarer Arbeitsbereich  
-- Speichern als PNG mit Zeitstempel  
+## ✨ Funktionen
 
-### Startfenster
-- Minimalistische GUI  
-- Button „Bereich auswählen“  
-- Info-Hinweis  
-
-### Request-Modus
-- Startbar mit `--request`  
-- Gibt JSON zurück (für Integrationen in andere Tools)
-
-### Zwischenablage
-- Jetzt können Bilder auch in die Zwischenablage kopiert werden
+- **Multi‑Monitor‑Screenshot** (X11) mit exakter Bereichsauswahl  
+- **Wayland‑Fallback** (falls Root‑Window nicht verfügbar)  
+- **Lupenwerkzeug** mit variabler Vergrößerung  
+- **Annotationen:**  
+  - Linien, Rechtecke, Kreise  
+  - Pfeile  
+  - Text (variable Schriftgrößen)  
+  - Marker  
+  - Freihand  
+  - **Pixelierung** (Blockgröße einstellbar)  
+- **Undo/Redo‑System**  
+- **Farbwahl & Liniendicken**  
+- **Zoom (CTRL + Mausrad)**  
+- **PNG‑Export & Zwischenablage‑Kopie**  
+- **JSON‑Request‑Modus** für automatisierte Workflows  
+- Automatische **Theme‑Erkennung** (Hell/Dunkel)
 
 ---
 
-## Abhängigkeiten
-- `python3-gi`  
-- `gir1.2-gtk-3.0`  
-- `gir1.2-gdk-3.0`  
-- `gir1.2-pangocairo-1.0`  
-- `python3-cairo`  
+## 📦 Abhängigkeiten
 
-Installation (Debian/Ubuntu):
+- Python 3  
+- GTK 3 (`python3-gi`, `gir1.2-gtk-3.0`)  
+- Cairo  
+- GdkPixbuf  
+- GLib  
+- Pango  
+
+---
+
+## 🚀 Starten
+
+### Bereich auswählen & Editor öffnen
 ```bash
-sudo apt install python3-gi gir1.2-gtk-3.0 gir1.2-gdk-3.0 gir1.2-pangocairo-1.0 python3-cairo
+guideos-bildschirmfoto-editor.py
+```
+
+### Direkt mit JSON‑Request‑Modus
+```bash
+guideos-bildschirmfoto-editor --json
+```
+
+---
+
+## 💾 Export
+
+- Speichern als **PNG**
+- Kopieren in die **Zwischenablage**
+- Ausgabe im JSON‑Modus:
+```json
+{ "status": "ok", "file": "/pfad/zum/export.png" }
+```
+
+---
+
+## 🖼️ Bedienung
+
+- **Linksklick & Ziehen:** Bereich auswählen / Formen zeichnen  
+- **Rechtsklick:** Abbrechen  
+- **CTRL + Mausrad:** Zoom  
+- **Werkzeugleiste:** Auswahl aller Tools & Einstellungen  
+
+---
+
+## 📚 Lizenz
+
+**MIT License**
 
