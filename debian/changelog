@@ -1,3 +1,15 @@
+guideos-screenshot-editor (1.7-1) unstable; urgency=medium
+
+  * debian/rules: Consolidated all installation into rules, removed dh_install
+  * debian/rules: Added installation of pixmaps (usr/share/pixmaps/)
+  * debian/rules: Corrected file names to guideos-bildschirmfoto-editor
+  * debian/install: Cleared, installation is now fully handled by rules
+  * debian/dirs: Cleared, directories are created by rules
+  * debian/control: Fixed dependencies – removed non-existent gir1.2-gdk-3.0
+    and gir1.2-pangocairo-1.0; added gir1.2-gdkpixbuf-2.0 and gir1.2-pango-1.0
+
+ -- Actionschnitzel <actionschnitzel@guideos.de>  Sun, 10 May 2026 14:04:00 +0200
+
 guideos-screenshot-editor (1.6-1) unstable; urgency=medium
 
   * Fixed inconsistent colors when using the clipboard
