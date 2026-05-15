@@ -1,3 +1,15 @@
+guideos-screenshot-editor (2.1-1) unstable; urgency=medium
+
+  * XFCE4-Unterstützung: Theme-Erkennung via xfconf-query
+  * Multi-DE Theme-Erkennung: GNOME, Cinnamon, MATE in Reihenfolge geprüft
+  * Screenshot-Engine: absolute Koordinaten, scrot-Fallback für XFCE4/xfwm4,
+    ImageMagick als dritter Fallback
+  * AreaSelectorWindow: korrekte Multi-Monitor-Geometrie (float inf),
+    event.x_root/y_root für präzise absolute Bereichsauswahl
+  * "Öffnen mit..."-Funktion mit Icon-Unterstützung
+
+ -- Actionschnitzel <actionschnitzel@guideos.de>  Thu, 15 May 2026 10:00:00 +0200
+
 guideos-screenshot-editor (1.7-1) unstable; urgency=medium
 
   * debian/rules: Consolidated all installation into rules, removed dh_install

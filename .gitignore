@@ -1,0 +1,39 @@
+# ============================================================
+# Arch Linux – makepkg Build-Ausgaben
+# ============================================================
+pkg/
+src/
+*.pkg.tar.zst
+*.pkg.tar.xz
+*.pkg.tar.gz
+
+# ============================================================
+# Debian – dpkg-buildpackage Build-Ausgaben
+# ============================================================
+debian/guideos-screenshot-editor/
+debian/guideos-screenshot-editor-debug/
+debian/tmp/
+debian/debhelper-build-stamp
+debian/files
+debian/*.substvars
+debian/*.log
+debian/.debhelper/
+
+*.deb
+*.ddeb
+*.changes
+*.dsc
+*.buildinfo
+*.upload
+
+# ============================================================
+# Python
+# ============================================================
+__pycache__/
+*.pyc
+*.pyo
+
+# ============================================================
+# Temporäre / lokale Hilfsdateien
+# ============================================================
+guideos-screenshot-editor-save
