@@ -8,7 +8,7 @@ Ein erweiterter Screenshot‑Editor für Linux mit Multi‑Monitor‑Support, pr
 evilware666 & Helga
 
 # Version:
-2.0
+2.1
 ---
 
 ## ✨ Funktionen
@@ -30,7 +30,15 @@ evilware666 & Helga
 - **JSON‑Request‑Modus** für automatisierte Workflows  
 - Automatische **Theme‑Erkennung** (Hell/Dunkel)
 
----
+## 💾 Export
+
+- Speichern als **PNG**
+- Kopieren in die **Zwischenablage**
+- Mit "öffnen mit.." zum direkten übertragen in andere Programme
+- Ausgabe im JSON‑Modus:
+```json
+{ "status": "ok", "file": "/pfad/zum/export.png" }
+```
 
 ## 📦 Abhängigkeiten
 
@@ -53,17 +61,6 @@ guideos-bildschirmfoto-editor.py
 ### Direkt mit JSON‑Request‑Modus
 ```bash
 guideos-bildschirmfoto-editor --json
-```
-
----
-
-## 💾 Export
-
-- Speichern als **PNG**
-- Kopieren in die **Zwischenablage**
-- Ausgabe im JSON‑Modus:
-```json
-{ "status": "ok", "file": "/pfad/zum/export.png" }
 ```
 
 ---

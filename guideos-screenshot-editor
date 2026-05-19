@@ -4,14 +4,12 @@
 # ==============================================================================
 # Titel       : GuideOS Bildschirmfoto‑Editor
 # Beschreibung: Erweiterter Screenshot‑Editor mit Multi‑Monitor‑Support,
-#               präziser Bereichsauswahl, Wayland‑Fallback, Lupenwerkzeug,
-#               Annotationen (Linien, Rechtecke, Kreise, Pfeile, Text,
-#               Freihand, Pixelierung), Undo/Redo, Farbwahl, variablen
-#               Liniendicken, Textgrößen, PNG‑Export und JSON‑Request‑Modus
+#               Wayland‑Fallback, Lupenwerkzeug, Annotationen, Pixelierung,
+#               Undo/Redo, Farbwahl, PNG‑Export und "Öffnen mit..." Funktion
 #
 # Autor       : evilware666 & Helga
-# Version     : 1.9
-# Datum       : 18.02.2026
+# Version     : 2.1
+# Datum       : 14.05.2026
 # Lizenz      : MIT
 # ==============================================================================
 
@@ -26,6 +24,7 @@ import json
 import sys
 import os
 import subprocess
+import tempfile
 from datetime import datetime
 
 
@@ -86,6 +85,113 @@ def get_theme_colors(theme_mode):
             "button_hover": "#e6e6e6",
             "button_text": "#000000",
         }
+
+
+# ===================== Konfiguration für "Öffnen mit..." =====================
+
+CONFIG_FILE = os.path.expanduser("~/.config/guideos-screenshot-editor.json")
+
+def load_default_app():
+    try:
+        if os.path.exists(CONFIG_FILE):
+            with open(CONFIG_FILE, 'r') as f:
+                config = json.load(f)
+                return config.get("default_app", None), config.get("default_app_name", None)
+    except:
+        pass
+    return None, None
+
+def save_default_app(app_path, app_name):
+    try:
+        os.makedirs(os.path.dirname(CONFIG_FILE), exist_ok=True)
+        config = {"default_app": app_path, "default_app_name": app_name}
+        with open(CONFIG_FILE, 'w') as f:
+            json.dump(config, f)
+    except:
+        pass
+
+def get_app_icon(app_name, app_path):
+    """Versucht das Icon einer Anwendung zu finden"""
+    icon_names = []
+    
+    possible_names = [
+        app_name.lower(),
+        app_path.split('/')[-1].lower(),
+        app_name.lower().replace(" ", ""),
+        app_name.lower().replace(" ", "-"),
+    ]
+    
+    icon_map = {
+        "gimp": "gimp",
+        "krita": "krita",
+        "pinta": "pinta",
+        "inkscape": "inkscape",
+        "shotwell": "shotwell",
+        "eog": "eog",
+        "libreoffice": "libreoffice-draw",
+        "kolourpaint": "kolourpaint",
+        "mypaint": "mypaint",
+        "firefox": "firefox",
+        "google-chrome": "google-chrome",
+        "chromium": "chromium-browser",
+        "display": "imagemagick",
+    }
+    
+    for name in possible_names:
+        if name in icon_map:
+            icon_names.append(icon_map[name])
+        icon_names.append(name)
+    
+    icon_names.extend(["applications-graphics", "image-x-generic", "image-viewer"])
+    
+    for icon_name in icon_names:
+        try:
+            icon_theme = Gtk.IconTheme.get_default()
+            if icon_theme.has_icon(icon_name):
+                return icon_theme.load_icon(icon_name, 32, 0)
+        except:
+            pass
+    
+    desktop_paths = [
+        f"/usr/share/applications/{app_name.lower()}.desktop",
+        f"/usr/share/applications/{app_path.split('/')[-1]}.desktop",
+        f"/usr/local/share/applications/{app_name.lower()}.desktop",
+    ]
+    
+    for desktop_path in desktop_paths:
+        if os.path.exists(desktop_path):
+            try:
+                with open(desktop_path, 'r') as f:
+                    for line in f:
+                        if line.startswith("Icon="):
+                            icon_name = line.split("=")[1].strip()
+                            icon_theme = Gtk.IconTheme.get_default()
+                            if icon_theme.has_icon(icon_name):
+                                return icon_theme.load_icon(icon_name, 32, 0)
+            except:
+                pass
+    
+    return None
+
+def find_installed_image_apps():
+    known_apps = [
+        ("GIMP", "gimp"), ("Krita", "krita"), ("Pinta", "pinta"),
+        ("Inkscape", "inkscape"), ("Shotwell", "shotwell"),
+        ("GNOME Bildbetrachter", "eog"), ("LibreOffice Draw", "libreoffice"),
+        ("KolourPaint", "kolourpaint"), ("MyPaint", "mypaint"),
+        ("Firefox", "firefox"), ("Chrome", "google-chrome"),
+        ("Chromium", "chromium"), ("ImageMagick", "display"),
+    ]
+    installed = []
+    system_paths = os.environ.get('PATH', '').split(':')
+    for app_name, bin_name in known_apps:
+        for path in system_paths:
+            full_path = os.path.join(path, bin_name)
+            if os.path.exists(full_path) and os.access(full_path, os.X_OK):
+                icon = get_app_icon(app_name, full_path)
+                installed.append((app_name, full_path, icon))
+                break
+    return installed
 
 
 # ===================== Screenshot-Engine =====================
@@ -289,7 +395,7 @@ class Tool:
     MAGNIFIER = "magnifier"
     MARKER    = "marker"
     FREEHAND  = "freehand"
-    PIXELATE  = "pixelate"   # NEU: Verpixelung
+    PIXELATE  = "pixelate"
 
 
 # ===================== Editor-Fenster =====================
@@ -306,6 +412,11 @@ class EditorWindow(Gtk.Window):
         self.theme_colors = get_theme_colors(self.theme_mode)
         print(f"System-Theme erkannt: {self.theme_mode}")
 
+        # Für "Öffnen mit..."
+        self.installed_apps = find_installed_image_apps()
+        self.default_app_path, self.default_app_name = load_default_app()
+
+        # ==================== CSS MIT GTK4/ADWAITA STYLE FÜR AKTIVE SCHALTER ====================
         css = f"""
         .tool-button {{
             border-radius: 4px; padding: 6px 12px;
@@ -315,27 +426,84 @@ class EditorWindow(Gtk.Window):
         }}
         .tool-button:checked, .tool-button:active {{
             background-color: {self.theme_colors['accent']};
-            color: white; border-color: #1a5a9c;
+            color: white; 
+            border: 1px solid {self.theme_colors['accent']};
         }}
-        .tool-button:hover {{ background-color: {self.theme_colors['button_hover']}; }}
-        .suggested-action {{ background-color: {self.theme_colors['accent']}; color: white; border: none; }}
-        .suggested-action:hover {{ background-color: #1a5a9c; }}
+        .tool-button:hover {{
+            background-color: {self.theme_colors['button_hover']};
+        }}
+        .suggested-action {{ 
+            background-color: {self.theme_colors['accent']}; 
+            color: white; 
+            border: none; 
+        }}
+        .suggested-action:hover {{ 
+            background-color: #1a5a9c; 
+        }}
+
+        /* GTK4/Adwaita Style für Combobox - aktiviert mit Akzentfarbe GEFÜLLT */
         .combobox {{
             background-color: {self.theme_colors['button_bg']};
             color: {self.theme_colors['button_text']};
-            border: 1px solid {self.theme_colors['border']}; border-radius: 4px;
+            border: 1px solid {self.theme_colors['border']};
+            border-radius: 4px;
+            padding: 4px 8px;
         }}
-        .combobox:hover {{ background-color: {self.theme_colors['button_hover']}; }}
-        .combobox arrow {{ color: {self.theme_colors['button_text']}; }}
-        GtkSeparator {{ background-color: {self.theme_colors['border']}; }}
-        GtkLabel {{ color: {self.theme_colors['fg_primary']}; }}
-        GtkHeaderBar {{ background-color: {self.theme_colors['bg_primary']}; color: {self.theme_colors['fg_primary']}; }}
-        GtkViewport {{ background-color: {self.theme_colors['bg_secondary']}; }}
-        GtkScrolledWindow {{ background-color: {self.theme_colors['bg_secondary']}; }}
+        .combobox:hover {{ 
+            background-color: {self.theme_colors['button_hover']}; 
+        }}
+        .combobox:focus {{
+            border-color: {self.theme_colors['accent']};
+            outline: none;
+        }}
+
+        /* AKTIVIERTER COMBOBOX - VOLL MIT AKZENTFARBE GEFÜLLT (wie GTK4/Adwaita) */
+        .combobox:active, 
+        .combobox:checked,
         .combo-active {{
             background-color: {self.theme_colors['accent']};
             color: white;
-            border-color: {self.theme_colors['accent']};
+            border: 1px solid {self.theme_colors['accent']};
+        }}
+        .combobox:active:hover,
+        .combo-active:hover {{
+            background-color: #1a5a9c;
+            border-color: #1a5a9c;
+        }}
+
+        /* GTK4/Adwaita Style für ToggleButton */
+        .toggle-button {{
+            background-color: {self.theme_colors['button_bg']};
+            color: {self.theme_colors['button_text']};
+            border: 1px solid {self.theme_colors['border']};
+            border-radius: 4px;
+            padding: 6px 12px;
+        }}
+        .toggle-button:hover {{
+            background-color: {self.theme_colors['button_hover']};
+        }}
+        .toggle-button:active,
+        .toggle-button:checked {{
+            background-color: {self.theme_colors['accent']};
+            color: white;
+            border: 1px solid {self.theme_colors['accent']};
+        }}
+
+        GtkSeparator {{ 
+            background-color: {self.theme_colors['border']}; 
+        }}
+        GtkLabel {{ 
+            color: {self.theme_colors['fg_primary']}; 
+        }}
+        GtkHeaderBar {{ 
+            background-color: {self.theme_colors['bg_primary']}; 
+            color: {self.theme_colors['fg_primary']}; 
+        }}
+        GtkViewport {{ 
+            background-color: {self.theme_colors['bg_secondary']}; 
+        }}
+        GtkScrolledWindow {{ 
+            background-color: {self.theme_colors['bg_secondary']}; 
         }}
         """
         css_provider = Gtk.CssProvider()
@@ -356,12 +524,12 @@ class EditorWindow(Gtk.Window):
         self.current_text_size  = 24.0
         self.magnifier_scale    = 2.0
         self.freehand_points    = []
-        self.pixel_size         = 10   # NEU: Standard-Pixelgröße
+        self.pixel_size         = 10
 
         self.font_sizes       = [12, 14, 16, 18, 20, 24, 28, 32, 36, 48]
         self.line_widths      = [1, 2, 3, 4, 5, 6, 8, 10]
         self.magnifier_scales = [1.5, 2.0, 2.5, 3.0, 4.0, 5.0]
-        self.pixel_sizes      = [4, 6, 8, 10, 12, 16, 20, 24, 32]  # NEU
+        self.pixel_sizes      = [4, 6, 8, 10, 12, 16, 20, 24, 32]
 
         self.background_pixbuf  = image_pixbuf
         self.background_surface = self.pixbuf_to_surface(image_pixbuf)
@@ -393,6 +561,13 @@ class EditorWindow(Gtk.Window):
             info_btn = Gtk.Button.new_with_label("Info")
             info_btn.connect("clicked", lambda w: self.show_info())
             header_bar.pack_start(info_btn)
+
+        # "Öffnen mit..." Button
+        open_with_btn = Gtk.Button.new_with_label("Öffnen mit...")
+        open_with_btn.get_style_context().add_class("suggested-action")
+        open_with_btn.set_tooltip_text("In einem installierten Programm öffnen")
+        open_with_btn.connect("clicked", self.on_open_with_clicked)
+        header_bar.pack_end(open_with_btn)
 
         clipboard_btn = Gtk.Button.new_with_label("Zwischenablage")
         clipboard_btn.get_style_context().add_class("suggested-action")
@@ -468,7 +643,7 @@ class EditorWindow(Gtk.Window):
                 Tool.MAGNIFIER: "zoom-in",
                 Tool.MARKER:    "marker",
                 Tool.FREEHAND:  "input-tablet",
-                Tool.PIXELATE:  "image-x-generic",   # Fallback Pixelierung
+                Tool.PIXELATE:  "image-x-generic",
             }
 
             icon_loaded = False
@@ -568,7 +743,7 @@ class EditorWindow(Gtk.Window):
         magnifier_box.pack_start(magnifier_label, False, False, 0)
         magnifier_box.pack_start(self.magnifier_combo, False, False, 0)
 
-        # NEU: Pixelgröße
+        # Pixelgröße
         pixelsize_box = Gtk.VBox(spacing=2)
         pixelsize_label = Gtk.Label()
         pixelsize_label.set_markup(f"<span size='small' foreground='{self.theme_colors['fg_primary']}'>Pixelgröße</span>")
@@ -577,7 +752,7 @@ class EditorWindow(Gtk.Window):
         self.pixelsize_combo.set_size_request(90, 30)
         for ps in self.pixel_sizes:
             self.pixelsize_combo.append_text(f"{ps} px")
-        self.pixelsize_combo.set_active(3)   # Standard: 10 px
+        self.pixelsize_combo.set_active(3)
         self.pixelsize_combo.connect("changed", self.on_pixelsize_changed)
         self.pixelsize_combo.get_style_context().add_class("combobox")
         pixelsize_box.pack_start(pixelsize_label, False, False, 0)
@@ -708,7 +883,6 @@ class EditorWindow(Gtk.Window):
                     self.draw_freehand_points(cr, self.freehand_points,
                                               self.current_color, self.current_line_width)
             elif self.current_tool == Tool.PIXELATE:
-                # Vorschau-Rahmen beim Aufziehen
                 sx, sy = self.screen_to_image_coords(self.start_x,   self.start_y)
                 cx, cy = self.screen_to_image_coords(self.current_x, self.current_y)
                 x = min(sx, cx); y = min(sy, cy)
@@ -783,14 +957,9 @@ class EditorWindow(Gtk.Window):
             cr.set_font_size(s["text_size"])
             cr.move_to(s["x1"], s["y1"]); cr.show_text(s["text"]); cr.stroke()
 
-    # ------------------------------------------------------------------ pixelierung (NEU)
+    # ------------------------------------------------------------------ pixelierung
 
     def draw_pixelate(self, cr, s):
-        """
-        Liest für jeden Block den Durchschnittsfarbwert aus dem
-        Hintergrundbild und füllt den Block mit dieser Farbe.
-        Ergebnis: echter Mosaikeffekt wie beim Unkenntlichmachen.
-        """
         x1 = int(min(s["x1"], s["x2"]))
         y1 = int(min(s["y1"], s["y2"]))
         x2 = int(max(s["x1"], s["x2"]))
@@ -798,14 +967,12 @@ class EditorWindow(Gtk.Window):
         ps = int(s.get("pixel_size", self.pixel_size))
         if ps < 1: ps = 1
 
-        # Clampen auf Bildgrenzen
         x1 = max(0, x1); y1 = max(0, y1)
         x2 = min(self.image_width,  x2)
         y2 = min(self.image_height, y2)
         if x2 <= x1 or y2 <= y1:
             return
 
-        # Rohdaten des Hintergrundbildes einmalig holen
         bg = self.background_surface
         stride = bg.get_stride()
         data   = bg.get_data()
@@ -817,13 +984,11 @@ class EditorWindow(Gtk.Window):
                 bx2 = min(bx + ps, x2)
                 by2 = min(by + ps, y2)
 
-                # Durchschnittsfarbe des Blocks berechnen
                 r_sum = g_sum = b_sum = 0
                 count = 0
                 for py in range(by, by2):
                     for px in range(bx, bx2):
                         offset = py * stride + px * 4
-                        # Cairo ARGB32 → BGRA in Speicher (little-endian)
                         b_sum += data[offset + 0]
                         g_sum += data[offset + 1]
                         r_sum += data[offset + 2]
@@ -981,9 +1146,8 @@ class EditorWindow(Gtk.Window):
                 self.drawing_area.queue_draw()
         dialog.destroy()
 
-    # ------------------------------------------------------------------ werkzeug-handler
+    # ------------------------------------------------------------------ werkzeug-handler mit Akzentfarbe
 
-    # Zuordnung Tool → zugehörige Combo (für Akzentfarbe-Steuerung)
     def _tool_combo_map(self):
         return {
             Tool.LINE:      self.linewidth_combo,
@@ -997,18 +1161,7 @@ class EditorWindow(Gtk.Window):
             Tool.PIXELATE:  self.pixelsize_combo,
         }
 
-    # Zuordnung Combo → Tool-Button (für Rückrichtung)
-    def _combo_tool_map(self):
-        return {
-            id(self.linewidth_combo):  None,          # mehrere Tools → kein Auto-Aktivieren
-            id(self.textsize_combo):   self.text_btn,
-            id(self.magnifier_combo):  self.magnifier_btn,
-            id(self.pixelsize_combo):  self.pixelate_btn,
-        }
-
     def _update_combo_highlight(self, active_tool):
-        """Setzt Akzentfarbe auf die zum aktiven Tool gehörende Combo,
-           alle anderen Combos werden grau (set_sensitive False)."""
         mapping = self._tool_combo_map()
         active_combo = mapping.get(active_tool, None)
         all_combos = [self.linewidth_combo, self.textsize_combo,
@@ -1041,32 +1194,30 @@ class EditorWindow(Gtk.Window):
         idx = combo.get_active()
         if 0 <= idx < len(self.line_widths):
             self.current_line_width = self.line_widths[idx]
+        self._activate_tool_from_combo(self.linewidth_combo, self.line_btn, Tool.LINE)
 
     def on_textsize_changed(self, combo):
         idx = combo.get_active()
         if 0 <= idx < len(self.font_sizes):
             self.current_text_size = self.font_sizes[idx]
-        # Combo angeklickt → Text-Tool aktivieren
-        self._activate_tool_from_combo(self.text_btn, Tool.TEXT)
+        self._activate_tool_from_combo(self.textsize_combo, self.text_btn, Tool.TEXT)
 
     def on_magnifier_changed(self, combo):
         idx = combo.get_active()
         if 0 <= idx < len(self.magnifier_scales):
             self.magnifier_scale = self.magnifier_scales[idx]
-        # Combo angeklickt → Lupe aktivieren
-        self._activate_tool_from_combo(self.magnifier_btn, Tool.MAGNIFIER)
+        self._activate_tool_from_combo(self.magnifier_combo, self.magnifier_btn, Tool.MAGNIFIER)
 
     def on_pixelsize_changed(self, combo):
         idx = combo.get_active()
         if 0 <= idx < len(self.pixel_sizes):
             self.pixel_size = self.pixel_sizes[idx]
-        # Combo angeklickt → Verpixeln aktivieren
-        self._activate_tool_from_combo(self.pixelate_btn, Tool.PIXELATE)
+        self._activate_tool_from_combo(self.pixelsize_combo, self.pixelate_btn, Tool.PIXELATE)
 
-    def _activate_tool_from_combo(self, tool_btn, tool_id):
-        """Aktiviert den Tool-Button wenn er noch nicht aktiv ist."""
-        if not tool_btn.get_active():
-            tool_btn.set_active(True)  # löst on_tool_toggled aus
+    def _activate_tool_from_combo(self, combo, tool_btn, tool_id):
+        # Nur wenn das Combo aktiviert ist (also wenn das entsprechende Tool aktiv ist)
+        if combo.get_sensitive() and not tool_btn.get_active():
+            tool_btn.set_active(True)
 
     # ------------------------------------------------------------------ undo/redo
 
@@ -1080,7 +1231,7 @@ class EditorWindow(Gtk.Window):
             self.shapes.append(self.redo_stack.pop())
             self.drawing_area.queue_draw()
 
-    # ------------------------------------------------------------------ render-helper (Speichern/Clipboard)
+    # ------------------------------------------------------------------ render-helper
 
     def render_to_surface(self):
         surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
@@ -1090,6 +1241,160 @@ class EditorWindow(Gtk.Window):
         for shape in self.shapes:
             self.draw_shape(cr, shape)
         return surface
+
+    # ------------------------------------------------------------------ "ÖFFNEN MIT..." FUNKTION MIT ICONS
+
+    def save_current_image(self):
+        try:
+            fd, temp_path = tempfile.mkstemp(suffix='.png', prefix='screenshot_')
+            os.close(fd)
+            self.render_to_surface().write_to_png(temp_path)
+            return temp_path
+        except Exception as e:
+            print(f"Fehler beim temporären Speichern: {e}")
+            return None
+
+    def on_open_with_clicked(self, btn):
+        popover = Gtk.Popover.new(btn)
+        popover.set_position(Gtk.PositionType.BOTTOM)
+
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+        main_box.set_margin_top(8)
+        main_box.set_margin_bottom(8)
+        main_box.set_margin_start(8)
+        main_box.set_margin_end(8)
+
+        if self.installed_apps:
+            title = Gtk.Label()
+            title.set_markup(f"<b>📂 Installierte Programme ({len(self.installed_apps)})</b>")
+            main_box.pack_start(title, False, False, 5)
+        else:
+            title = Gtk.Label()
+            title.set_markup("<b>📂 Programm auswählen</b>")
+            main_box.pack_start(title, False, False, 5)
+
+        separator = Gtk.Separator()
+        main_box.pack_start(separator, False, False, 5)
+
+        scrolled = Gtk.ScrolledWindow()
+        scrolled.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        scrolled.set_min_content_height(300)
+        scrolled.set_max_content_height(400)
+
+        apps_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=3)
+
+        if self.installed_apps:
+            for app_name, app_path, icon in sorted(self.installed_apps, key=lambda x: x[0]):
+                btn_app = Gtk.Button()
+                btn_app.set_size_request(220, 40)
+                btn_app.set_halign(Gtk.Align.CENTER)
+                
+                hbox = Gtk.HBox(spacing=10)
+                hbox.set_margin_start(10)
+                hbox.set_margin_end(10)
+                
+                if icon:
+                    image = Gtk.Image.new_from_pixbuf(icon)
+                else:
+                    image = Gtk.Label(label="🖼️")
+                    image.set_size_request(32, 32)
+                hbox.pack_start(image, False, False, 0)
+                
+                label = Gtk.Label(label=app_name)
+                label.set_halign(Gtk.Align.START)
+                hbox.pack_start(label, True, True, 10)
+                
+                btn_app.add(hbox)
+                btn_app.set_tooltip_text(f"Startbefehl: {app_path}")
+                btn_app.connect("clicked", self.on_open_with_app, app_path, app_name, popover)
+                apps_box.pack_start(btn_app, False, False, 2)
+        else:
+            info_label = Gtk.Label()
+            info_label.set_markup("<i>Keine Programme gefunden.\nBitte manuell eingeben:</i>")
+            info_label.set_margin_bottom(10)
+            apps_box.pack_start(info_label, False, False, 5)
+
+            entry = Gtk.Entry()
+            entry.set_placeholder_text("z.B. gimp, krita, /usr/bin/gimp")
+            entry.set_size_request(220, 35)
+            apps_box.pack_start(entry, False, False, 5)
+
+            run_btn = Gtk.Button.new_with_label("Starten")
+            run_btn.get_style_context().add_class("suggested-action")
+            run_btn.connect("clicked", self.on_custom_open, entry, popover)
+            apps_box.pack_start(run_btn, False, False, 5)
+
+        scrolled.add(apps_box)
+        main_box.pack_start(scrolled, True, True, 0)
+
+        if self.default_app_name:
+            default_label = Gtk.Label()
+            default_label.set_markup(f"<i>Zuletzt verwendet: {self.default_app_name}</i>")
+            default_label.set_margin_top(5)
+            main_box.pack_start(default_label, False, False, 0)
+
+        popover.add(main_box)
+        popover.show_all()
+        popover.popup()
+
+    def on_open_with_app(self, btn, command, app_name, popover):
+        popover.hide()
+        temp_file = self.save_current_image()
+        if not temp_file:
+            error_dialog = Gtk.MessageDialog(
+                transient_for=self, flags=0,
+                message_type=Gtk.MessageType.ERROR,
+                buttons=Gtk.ButtonsType.OK,
+                text="Fehler beim Speichern"
+            )
+            error_dialog.format_secondary_text("Das Bild konnte nicht temporär gespeichert werden.")
+            error_dialog.run()
+            error_dialog.destroy()
+            return
+
+        save_default_app(command, app_name)
+        self.default_app_path = command
+        self.default_app_name = app_name
+
+        try:
+            subprocess.Popen([command, temp_file])
+        except Exception as e:
+            error_dialog = Gtk.MessageDialog(
+                transient_for=self, flags=0,
+                message_type=Gtk.MessageType.ERROR,
+                buttons=Gtk.ButtonsType.OK,
+                text="Fehler beim Öffnen"
+            )
+            error_dialog.format_secondary_text(f"{str(e)}")
+            error_dialog.run()
+            error_dialog.destroy()
+            try:
+                os.unlink(temp_file)
+            except:
+                pass
+
+    def on_custom_open(self, btn, entry, popover):
+        command = entry.get_text().strip()
+        if not command:
+            return
+        popover.hide()
+        temp_file = self.save_current_image()
+        if not temp_file:
+            return
+        try:
+            cmd_parts = command.split()
+            subprocess.Popen(cmd_parts + [temp_file])
+            save_default_app(command, command)
+        except Exception as e:
+            error_dialog = Gtk.MessageDialog(
+                transient_for=self, flags=0,
+                message_type=Gtk.MessageType.ERROR,
+                buttons=Gtk.ButtonsType.OK,
+                text="Fehler"
+            )
+            error_dialog.format_secondary_text(str(e))
+            error_dialog.run()
+            error_dialog.destroy()
 
     # ------------------------------------------------------------------ zwischenablage
 
@@ -1117,9 +1422,6 @@ class EditorWindow(Gtk.Window):
                                     text="In Zwischenablage kopiert")
             dlg.format_secondary_text(
                 "Das Bild wurde in die Zwischenablage kopiert.")
-            dlg.get_message_area().get_children()[0].set_markup(
-                '<span background="#2573bf" foreground="white" weight="bold" size="large">'
-                ' In Zwischenablage kopiert </span>')
             dlg.run(); dlg.destroy()
         except Exception as e:
             dlg = Gtk.MessageDialog(transient_for=self, flags=0,
@@ -1177,6 +1479,10 @@ class EditorWindow(Gtk.Window):
             "• Freihand: Freies Malen\n"
             "• Verpixeln: Gesichter / Daten unkenntlich machen\n"
             "• Lupe: Vergrößert Details\n\n"
+            "📂 ÖFFNEN MIT...:\n"
+            "• Bild direkt in GIMP, Krita, etc. öffnen\n"
+            "• Automatische Erkennung installierter Programme\n"
+            "• MIT ICONS für jedes Programm!\n\n"
             "Tastenkürzel:\n"
             "• ESC: Abbrechen  •  Strg+Mausrad: Zoom\n\n"
             f"Theme: {'Dunkel' if self.theme_mode == 'dark' else 'Hell'}"
