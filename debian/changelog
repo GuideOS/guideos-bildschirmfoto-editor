@@ -1,3 +1,9 @@
+guideos-screenshot-editor (2.2.1-gnome) unstable; urgency=medium
+
+  * Debian package build for version 2.2.1-gnome from the current sources
+
+ -- Actionschnitzel <actionschnitzel@guideos.de>  Sun, 26 Jul 2026 12:00:00 +0200
+
 guideos-screenshot-editor (1.8-1) unstable; urgency=medium
 
   * pixelation was added

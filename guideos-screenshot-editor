@@ -8,7 +8,7 @@
 #               NEU: Ganzer Bildschirm, Aktives Fenster, Bereich auswählen
 #
 # Autor       : evilware666 & Helga
-# Version     : 2.2
+# Version     : 2.2.1-gnome
 # Datum       : 26.07.2026
 # Lizenz      : MIT
 # ==============================================================================
@@ -27,6 +27,7 @@ from gi.repository import Gtk, Gdk, GdkPixbuf, GLib, Pango
 import math
 import json
 import os
+import shutil
 import subprocess
 import tempfile
 from datetime import datetime
@@ -35,16 +36,14 @@ from datetime import datetime
 
 def detect_system_theme():
     try:
-        gsettings_cmd = ["gsettings", "get", "org.cinnamon.desktop.interface", "gtk-theme"]
-        result = subprocess.run(gsettings_cmd, capture_output=True, text=True)
-        if result.returncode == 0:
-            theme_name = result.stdout.strip().strip("'")
-            if "dark" in theme_name.lower() or "black" in theme_name.lower():
-                return "dark"
-            else:
-                return check_background_color()
-        else:
-            return check_background_color()
+        gtk_settings = Gtk.Settings.get_default()
+        if gtk_settings is not None:
+            theme_name = gtk_settings.get_property("gtk-theme-name")
+            if theme_name:
+                theme_name = theme_name.lower()
+                if "dark" in theme_name or "black" in theme_name or "night" in theme_name:
+                    return "dark"
+        return check_background_color()
     except Exception as e:
         print(f"Theme-Erkennung fehlgeschlagen: {e}")
         return "light"
@@ -202,22 +201,62 @@ def find_installed_image_apps():
 class ScreenshotEngine:
 
     @staticmethod
+    def get_display_workspace():
+        display = Gdk.Display.get_default()
+        if display is None:
+            return None
+        monitors = []
+        min_x = float('inf')
+        min_y = float('inf')
+        max_x = float('-inf')
+        max_y = float('-inf')
+        for i in range(display.get_n_monitors()):
+            monitor = display.get_monitor(i)
+            geometry = monitor.get_geometry()
+            monitors.append({
+                'number': i,
+                'x': geometry.x,
+                'y': geometry.y,
+                'width': geometry.width,
+                'height': geometry.height,
+                'name': monitor.get_model() or f"Monitor {i+1}"
+            })
+            min_x = min(min_x, geometry.x)
+            min_y = min(min_y, geometry.y)
+            max_x = max(max_x, geometry.x + geometry.width)
+            max_y = max(max_y, geometry.y + geometry.height)
+        if min_x == float('inf') or min_y == float('inf'):
+            return None
+        return {
+            'monitors': monitors,
+            'x': int(min_x),
+            'y': int(min_y),
+            'width': int(max_x - min_x),
+            'height': int(max_y - min_y),
+        }
+
+    @staticmethod
     def capture_area(x, y, width, height, monitor_num=None):
         display = Gdk.Display.get_default()
-        screen = display.get_default_screen()
-        if monitor_num is not None:
-            monitor = display.get_monitor(monitor_num)
-            geometry = monitor.get_geometry()
-            monitor_x, monitor_y = geometry.x, geometry.y
-            monitor_width, monitor_height = geometry.width, geometry.height
-            x += monitor_x
-            y += monitor_y
-            if x < monitor_x: x = monitor_x
-            if y < monitor_y: y = monitor_y
-            if x + width > monitor_x + monitor_width:
-                width = monitor_width - (x - monitor_x)
-            if y + height > monitor_y + monitor_height:
-                height = monitor_height - (y - monitor_y)
+        if display is None:
+            return None
+
+        workspace = ScreenshotEngine.get_display_workspace()
+        if workspace is not None:
+            x = int(x)
+            y = int(y)
+            width = max(1, int(width))
+            height = max(1, int(height))
+            x0 = max(workspace['x'], x)
+            y0 = max(workspace['y'], y)
+            x1 = min(workspace['x'] + workspace['width'], x + width)
+            y1 = min(workspace['y'] + workspace['height'], y + height)
+            if x1 <= x0:
+                x1 = min(workspace['x'] + workspace['width'], x0 + 1)
+            if y1 <= y0:
+                y1 = min(workspace['y'] + workspace['height'], y0 + 1)
+            x, y, width, height = x0, y0, x1 - x0, y1 - y0
+
         root = Gdk.get_default_root_window()
         if not root:
             print("Kein Root-Window gefunden")
@@ -303,23 +342,45 @@ class ScreenshotEngine:
         except Exception as e:
             print(f"wmctrl nicht verfügbar: {e}")
 
+        # Methode 3: xprop + xwininfo
+        if shutil.which("xprop") and shutil.which("xwininfo"):
+            try:
+                r = subprocess.run(["xprop", "-root", "_NET_ACTIVE_WINDOW"],
+                                    capture_output=True, text=True, timeout=2)
+                if r.returncode == 0 and "_NET_ACTIVE_WINDOW(WINDOW):" in r.stdout:
+                    win_id_hex = r.stdout.strip().split()[-1]
+                    if win_id_hex != "0x0":
+                        r2 = subprocess.run(["xwininfo", "-id", win_id_hex],
+                                            capture_output=True, text=True, timeout=2)
+                        if r2.returncode == 0:
+                            x = y = w = h = None
+                            for line in r2.stdout.splitlines():
+                                if "Absolute upper-left X:" in line:
+                                    x = int(line.split(':', 1)[1].strip())
+                                elif "Absolute upper-left Y:" in line:
+                                    y = int(line.split(':', 1)[1].strip())
+                                elif line.strip().startswith("Width:"):
+                                    w = int(line.split(':', 1)[1].strip())
+                                elif line.strip().startswith("Height:"):
+                                    h = int(line.split(':', 1)[1].strip())
+                            if None not in (x, y, w, h) and w > 0 and h > 0:
+                                root = Gdk.get_default_root_window()
+                                pb = Gdk.pixbuf_get_from_window(root, x, y, w, h)
+                                if pb:
+                                    return pb
+            except Exception as e:
+                print(f"xprop/xwininfo Fehlermeldung: {e}")
+
         # Fallback: ganzer Bildschirm
         print("Aktives Fenster nicht ermittelbar, Fallback auf ganzen Bildschirm")
         return ScreenshotEngine.capture_fullscreen()
 
     @staticmethod
     def get_monitors():
-        display = Gdk.Display.get_default()
-        monitors = []
-        for i in range(display.get_n_monitors()):
-            monitor = display.get_monitor(i)
-            geometry = monitor.get_geometry()
-            monitors.append({
-                'number': i, 'x': geometry.x, 'y': geometry.y,
-                'width': geometry.width, 'height': geometry.height,
-                'name': monitor.get_model() or f"Monitor {i+1}"
-            })
-        return monitors
+        workspace = ScreenshotEngine.get_display_workspace()
+        if workspace is None:
+            return []
+        return workspace['monitors']
 
 
 # ===================== Bereichsauswahl-Fenster =====================
@@ -340,8 +401,8 @@ class AreaSelectorWindow(Gtk.Window):
             self.set_visual(visual)
         if self.multi_monitor:
             display = Gdk.Display.get_default()
-            min_x = min_y = 0
-            max_x = max_y = 0
+            min_x = min_y = float('inf')
+            max_x = max_y = float('-inf')
             for i in range(display.get_n_monitors()):
                 monitor = display.get_monitor(i)
                 geometry = monitor.get_geometry()
@@ -349,12 +410,15 @@ class AreaSelectorWindow(Gtk.Window):
                 min_y = min(min_y, geometry.y)
                 max_x = max(max_x, geometry.x + geometry.width)
                 max_y = max(max_y, geometry.y + geometry.height)
-            self.move(min_x, min_y)
-            self.set_default_size(max_x - min_x, max_y - min_y)
-            self.fullscreen_on_monitor(screen, 0)
+            self._multi_x = int(min_x)
+            self._multi_y = int(min_y)
+            self._multi_w = int(max_x - min_x)
+            self._multi_h = int(max_y - min_y)
+            self.set_default_size(self._multi_w, self._multi_h)
         else:
             self.fullscreen()
         self.start_x = self.start_y = self.cur_x = self.cur_y = 0
+        self.abs_start_x = self.abs_start_y = 0
         self.selecting = self.finished = False
         self.result_rect = None
         self.selected_monitor = None
@@ -412,23 +476,28 @@ class AreaSelectorWindow(Gtk.Window):
         if event.button == 1:
             self.start_x = event.x; self.start_y = event.y
             self.cur_x = event.x; self.cur_y = event.y
+            self.abs_start_x = event.x_root; self.abs_start_y = event.y_root
             self.selecting = True
             if self.multi_monitor:
-                self.selected_monitor = self.get_monitor_at_position(event.x, event.y)
+                self.selected_monitor = self.get_monitor_at_position(
+                    event.x_root, event.y_root)
             self.queue_draw()
 
     def on_mouse_move(self, widget, event):
         if self.selecting:
             self.cur_x = event.x; self.cur_y = event.y
             if self.multi_monitor and self.selected_monitor is None:
-                self.selected_monitor = self.get_monitor_at_position(event.x, event.y)
+                self.selected_monitor = self.get_monitor_at_position(
+                    event.x_root, event.y_root)
             self.queue_draw()
 
     def on_button_release(self, widget, event):
         if event.button == 1 and self.selecting:
             self.selecting = False
-            x = min(self.start_x, event.x); y = min(self.start_y, event.y)
-            w = abs(event.x - self.start_x); h = abs(event.y - self.start_y)
+            x = min(self.abs_start_x, event.x_root)
+            y = min(self.abs_start_y, event.y_root)
+            w = abs(event.x_root - self.abs_start_x)
+            h = abs(event.y_root - self.abs_start_y)
             if w > 10 and h > 10:
                 self.result_rect = (x, y, w, h)
             self.finished = True
@@ -451,7 +520,15 @@ class AreaSelectorWindow(Gtk.Window):
         return None
 
     def run(self):
-        self.show_all(); self.grab_add(); self.grab_focus()
+        self.show_all()
+        if self.multi_monitor:
+            while Gtk.events_pending():
+                Gtk.main_iteration_do(False)
+            gdk_win = self.get_window()
+            if gdk_win:
+                gdk_win.move_resize(
+                    self._multi_x, self._multi_y, self._multi_w, self._multi_h)
+        self.grab_add(); self.grab_focus()
         while not self.finished:
             while Gtk.events_pending():
                 Gtk.main_iteration_do(False)

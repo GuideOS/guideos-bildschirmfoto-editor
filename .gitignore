@@ -1,0 +1,7 @@
+# Build artifacts
+.SRCINFO
+*.pkg.tar.zst
+*.deb
+__pycache__/
+pkg/
+src/

@@ -1,7 +1,11 @@
 
 # GuideOS Bildschirmfoto‑Editor  
-**Version 2.2 – 26.07.2026**  
+**Version 2.2.1-gnome – 26.07.2026**  
 Erweiterter Screenshot‑Editor für Linux (GTK3), optimiert für Cinnamon, X11 und Multi‑Monitor‑Setups.
+
+## 📦 Paketierung
+- Arch Linux: `makepkg -si`
+- Debian/Ubuntu: die erzeugte `.deb`-Datei kann direkt installiert werden, z. B. mit `sudo dpkg -i guideos-screenshot-editor_2.2.1-gnome_all.deb`
 
 ## ✨ Funktionen
 Der Editor bietet eine umfangreiche Werkzeugpalette für professionelle und schnelle Bildschirmbearbeitung:
@@ -91,7 +95,20 @@ Version 2.2 bringt ein neues, modernes Styling:
 
 ---
 
-## 📦 Abhängigkeiten
+## � Arch Linux / pacman
+Für Arch Linux kann das Projekt direkt als Paket gebaut werden:
+
+```bash
+makepkg -si
+```
+
+Alternativ kann die erzeugte Paketdatei auch separat installiert werden:
+
+```bash
+sudo pacman -U guideos-screenshot-editor-2.2-1-any.pkg.tar.zst
+```
+
+## �📦 Abhängigkeiten
 ### Pflicht:
 - `python3`
 - `python3-gi`
