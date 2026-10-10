@@ -12,7 +12,7 @@ ohne externe Bildbearbeitungssoftware.
 
 - **Version:** 3.1.2
 - **Entwickler:** evilware666 & Helga
-- **Lizenz:** GPLv.3 – freie Verwendung, Änderung und Weitergabe (auch kommerziell)
+- **Lizenz:** GPLv.3 
 
 ---
 
@@ -218,75 +218,4 @@ Speicherordner verwendet.
 - **Sehr große Screenshots** (4K-Vollbild) können bei schwacher Hardware
   kurze Verzögerungen beim Öffnen verursachen.
 
----
 
-## Änderungshistorie
-
-### Version 3.0.8 (aktuell)
-- Verzögerungen angepasst (450/500/650 ms), damit das Start-Fenster
-  sicher ausgeblendet ist
-- Menü-Präfix auf `win.` korrigiert (Ordner/Info funktionieren jetzt)
-- Beenden-Button unten zentriert im Modi-Fenster
-- Standard-Ordner `~/Bilder` mit Fallback auf `~/Pictures`
-
-### Version 3.0.x
-- HiDPI-Korrektur für Bereichsauswahl
-- Auto-Zoom für kleine Auswahlen (< 300 px)
-- Transparentes Overlay mit Live-Anzeige
-- Auto-Finish beim Loslassen
-- Werkzeugeinstellungen persistent
-- Zwischenablage über `Gdk.ContentProvider` (GTK4-nativ)
-- „Öffnen mit…" mit Icon-Erkennung
-
-### Version 2.3.0 (GTK3-Version, archiviert)
-- Toolbar-Buttons 52×52, Icons 44×44
-- Wayland-Unterstützung entfernt (X11-only)
-- Marker auf 40 % Alpha
-
----
-
-## Lizenz
-
-Dieses Projekt steht unter der **GPLv.3**. Du darfst es frei verwenden,
-ändern und weitergeben – auch kommerziell.
-
-```
-Copyright (c) 2026 evilware666 & Helga
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program. If not, see <https://www.gnu.org/licenses/>.
-```
-
----
-
-**Viel Spaß mit dem GuideOS Bildschirmfoto-Editor!** 🎉
-```
-
-## Die wichtigsten Korrekturen im Überblick
-
-| Kategorie | Alt | Neu |
-|---|---|---|
-| **GTK-Version** | 3.0 | **4.0** |
-| **UI-Framework** | ohne | **libadwaita** |
-| **Version** | 2.3.0 | **3.0.8** |
-| **Pakete** | `gir1.2-gtk-3.0` | `gir1.2-gtk-4.0` + `gir1.2-adw-1` |
-| **Aufnahmemodi** | nur Bereich | **3 Modi** |
-| **Auswahl-Bestätigung** | Enter/Leertaste | **automatisch beim Loslassen** |
-| **Editor-Zoom** | Fit +55 % | Start 40 %, feines Zoom per Mausrad |
-| **Toolbar-Größen** | 52×52 / 44×44 | 42×42 / 26er-Icons |
-| **Menü** | keins erwähnt | Ordner + Info in beiden Fenstern |
-| **Beenden** | keins erwähnt | Buttons in beiden Fenstern |
-| **Config-Keys** | `hide_select_hint` | entfernt |
-| **Lizenz** | „MIT" (im Header) | **GPLv.3** |
-
-Wenn du willst, kann ich die README auch noch weiter anpassen (z. B. Screenshots einbauen, englische Version, kürzere Fassung). Sag einfach Bescheid. 🎯
