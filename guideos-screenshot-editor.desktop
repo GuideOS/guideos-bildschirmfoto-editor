@@ -2,9 +2,10 @@
 Type=Application
 Name=GuideOS Bildschirmfoto-Editor
 Comment=Erweitertes Screenshot- und Annotationstool für GuideOS
-Exec=guideos-screenshot-editor
-Icon=guideos-screenshot-editor
+Exec=guideos-bildschirmfoto-editor
+Icon=guideos-bildschirmfoto-editor
 Terminal=false
-Categories=GuideOS;
+Categories=Graphics;GuideOS;
 StartupNotify=true
+
 
